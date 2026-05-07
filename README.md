@@ -30,7 +30,16 @@ src/
       homepage.ts
       seo.ts
       types.ts
-  styles.css
+  styles/
+    fonts.css
+    global.css
+    reset.css
+    tokens.css
+    typography.css
+public/
+  assets/
+    fonts/
+    images/
 optional/
   posts/
   newsletter/
