@@ -1,0 +1,181 @@
+---
+type Props = {
+  id: string;
+  name?: string;
+  label: string;
+  description?: string;
+  error?: string;
+  value?: string;
+  checked?: boolean;
+  required?: boolean;
+  disabled?: boolean;
+  class?: string;
+};
+
+const {
+  id,
+  name = id,
+  label,
+  description,
+  error,
+  value = 'on',
+  checked = false,
+  required = false,
+  disabled = false,
+  class: className = ''
+} = Astro.props;
+
+const descriptionId = description ? `${id}-description` : undefined;
+const errorId = error ? `${id}-error` : undefined;
+const describedBy = [descriptionId, errorId].filter(Boolean).join(' ') || undefined;
+---
+
+<div class:list={['ui-checkbox-field', className]}>
+  <label class="ui-checkbox-row" for={id}>
+    <span class="ui-checkbox-control" aria-hidden="true">
+      <input
+        id={id}
+        name={name}
+        type="checkbox"
+        value={value}
+        checked={checked}
+        required={required}
+        disabled={disabled}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={describedBy}
+      />
+      <span class="ui-checkbox-box">
+        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+          <path d="M3.5 8.2 6.7 11.4 12.8 4.8" />
+        </svg>
+      </span>
+    </span>
+    <span class="ui-checkbox-copy">
+      <span class="ui-checkbox-label">{label}</span>
+      {description ? <span id={descriptionId} class="ui-checkbox-description">{description}</span> : null}
+    </span>
+  </label>
+  {error ? <span id={errorId} class="ui-checkbox-error">{error}</span> : null}
+</div>
+
+<style>
+  .ui-checkbox-field {
+    --checkbox-size: 20px;
+    --checkbox-radius: 6px;
+    --checkbox-border: var(--color-border);
+    --checkbox-bg: var(--color-surface);
+    --checkbox-checked-bg: var(--color-accent);
+    --checkbox-checked-border: var(--color-accent);
+    --checkbox-check-color: #fff;
+    --checkbox-focus: color-mix(in srgb, var(--color-accent) 24%, transparent);
+
+    display: grid;
+    gap: 8px;
+  }
+
+  .ui-checkbox-row {
+    display: grid;
+    grid-template-columns: var(--checkbox-size) minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .ui-checkbox-control {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--checkbox-size);
+    height: var(--checkbox-size);
+    margin-top: 2px;
+  }
+
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  .ui-checkbox-box {
+    display: grid;
+    place-items: center;
+    width: var(--checkbox-size);
+    height: var(--checkbox-size);
+    border: 1px solid var(--checkbox-border);
+    border-radius: var(--checkbox-radius);
+    background: var(--checkbox-bg);
+    color: var(--checkbox-check-color);
+    transition:
+      border-color 160ms ease,
+      background 160ms ease,
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+
+  svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transform: scale(0.72);
+    transition:
+      opacity 120ms ease,
+      transform 120ms ease;
+  }
+
+  input:checked + .ui-checkbox-box {
+    border-color: var(--checkbox-checked-border);
+    background: var(--checkbox-checked-bg);
+  }
+
+  input:checked + .ui-checkbox-box svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  input:focus-visible + .ui-checkbox-box {
+    box-shadow: 0 0 0 3px var(--checkbox-focus);
+  }
+
+  input[aria-invalid='true'] + .ui-checkbox-box {
+    border-color: #d04734;
+  }
+
+  input:disabled + .ui-checkbox-box,
+  .ui-checkbox-row:has(input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  .ui-checkbox-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .ui-checkbox-label {
+    color: var(--color-text);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  .ui-checkbox-description,
+  .ui-checkbox-error {
+    color: var(--color-muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .ui-checkbox-error {
+    color: #af2c1a;
+  }
+</style>

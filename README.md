@@ -15,6 +15,7 @@ src/
   components/
     ui/
       Button.astro
+      CheckboxField.astro
       Container.astro
       InputField.astro
       SelectField.astro
@@ -50,6 +51,7 @@ Optional examples live in `optional/`. Copy them into `src/` only if you need th
 The template includes neutral Astro primitives in `src/components/ui`:
 
 - `Button.astro`
+- `CheckboxField.astro`
 - `Container.astro`
 - `Section.astro`
 - `InputField.astro`
