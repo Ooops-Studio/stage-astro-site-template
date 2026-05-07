@@ -64,6 +64,8 @@ The template includes neutral Astro primitives in `src/components/ui`:
 
 They are intentionally local to the template, not an npm design system. Edit or delete them to match the site.
 
+`Button.astro` can render text, an image-only button, or image + text. Use `imagePosition="before"` or `imagePosition="after"` to control placement.
+
 `SelectField.astro` is the custom select primitive. It includes a searchable grouped listbox, option icons, async filtering, portal positioning, and richer open/close keyboard behavior.
 
 `Dialog.astro` and `Modal.astro` use native `<dialog>` under the hood for accessible modal semantics, Escape handling, focus behavior, and return-focus support. They expose local CSS variables for easy visual customization.
