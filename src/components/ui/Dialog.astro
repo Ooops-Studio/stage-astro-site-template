@@ -1,0 +1,204 @@
+---
+type Props = {
+  id: string;
+  title: string;
+  description?: string;
+  triggerLabel?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  tone?: 'primary' | 'danger';
+  closeOnBackdrop?: boolean;
+  disabled?: boolean;
+  class?: string;
+};
+
+const {
+  id,
+  title,
+  description,
+  triggerLabel,
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  tone = 'primary',
+  closeOnBackdrop = true,
+  disabled = false,
+  class: className = ''
+} = Astro.props;
+
+const titleId = `${id}-title`;
+const descriptionId = description ? `${id}-description` : undefined;
+---
+
+{triggerLabel ? (
+  <button class="ui-dialog-trigger" type="button" data-dialog-open={id} disabled={disabled}>
+    {triggerLabel}
+  </button>
+) : null}
+
+<dialog
+  id={id}
+  class:list={['ui-dialog', `ui-dialog-${tone}`, className]}
+  aria-labelledby={titleId}
+  aria-describedby={descriptionId}
+  data-dialog
+  data-close-on-backdrop={closeOnBackdrop ? 'true' : 'false'}
+>
+  <div class="ui-dialog-card" data-dialog-card>
+    <header class="ui-dialog-header">
+      <h2 id={titleId}>{title}</h2>
+      {description ? <p id={descriptionId}>{description}</p> : null}
+    </header>
+
+    <div class="ui-dialog-body">
+      <slot />
+    </div>
+
+    <footer class="ui-dialog-actions">
+      <form method="dialog">
+        <button class="ui-dialog-button ui-dialog-button-ghost" value="cancel" type="submit">
+          {cancelLabel}
+        </button>
+      </form>
+      <form method="dialog">
+        <button class="ui-dialog-button ui-dialog-button-confirm" value="confirm" type="submit" autofocus>
+          {confirmLabel}
+        </button>
+      </form>
+    </footer>
+  </div>
+</dialog>
+
+<script>
+  // @ts-nocheck
+  document.querySelectorAll('[data-dialog]').forEach((dialog) => {
+    if (!(dialog instanceof HTMLDialogElement) || dialog.dataset.dialogReady === 'true') return;
+    dialog.dataset.dialogReady = 'true';
+
+    let opener = null;
+
+    const openDialog = (trigger) => {
+      opener = trigger instanceof HTMLElement ? trigger : document.activeElement;
+      if (!dialog.open) dialog.showModal();
+    };
+
+    document.querySelectorAll(`[data-dialog-open="${CSS.escape(dialog.id)}"]`).forEach((trigger) => {
+      trigger.addEventListener('click', () => openDialog(trigger));
+    });
+
+    dialog.addEventListener('click', (event) => {
+      if (dialog.dataset.closeOnBackdrop !== 'true') return;
+      if (event.target === dialog) dialog.close('cancel');
+    });
+
+    dialog.addEventListener('close', () => {
+      const detail = { value: dialog.returnValue || 'cancel', dialog };
+      dialog.dispatchEvent(new CustomEvent('dialog:close', { bubbles: true, detail }));
+      if (dialog.returnValue === 'confirm') {
+        dialog.dispatchEvent(new CustomEvent('dialog:confirm', { bubbles: true, detail }));
+      }
+      if (opener instanceof HTMLElement && document.contains(opener)) opener.focus();
+    });
+  });
+</script>
+
+<style>
+  .ui-dialog-trigger,
+  .ui-dialog-button {
+    min-height: 40px;
+    padding-inline: 16px;
+    border: 1px solid var(--dialog-button-border, var(--color-border));
+    border-radius: var(--dialog-button-radius, 999px);
+    background: var(--dialog-button-bg, var(--color-surface));
+    color: var(--dialog-button-color, var(--color-text));
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .ui-dialog-trigger:focus-visible,
+  .ui-dialog-button:focus-visible {
+    outline: 3px solid var(--dialog-focus, color-mix(in srgb, var(--color-accent) 28%, transparent));
+    outline-offset: 3px;
+  }
+
+  .ui-dialog-trigger:disabled,
+  .ui-dialog-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
+  }
+
+  .ui-dialog {
+    --dialog-width: min(460px, calc(100vw - 32px));
+    --dialog-radius: 14px;
+    --dialog-padding: 20px;
+    --dialog-backdrop: rgb(25 24 23 / 42%);
+    --dialog-shadow: 0 22px 80px rgb(0 0 0 / 20%);
+
+    width: var(--dialog-width);
+    max-width: var(--dialog-width);
+    padding: 0;
+    border: 1px solid var(--dialog-border, var(--color-border));
+    border-radius: var(--dialog-radius);
+    background: var(--dialog-bg, var(--color-surface));
+    color: var(--color-text);
+    box-shadow: var(--dialog-shadow);
+  }
+
+  .ui-dialog::backdrop {
+    background: var(--dialog-backdrop);
+    backdrop-filter: blur(var(--dialog-backdrop-blur, 8px));
+  }
+
+  .ui-dialog-card {
+    display: grid;
+    gap: 18px;
+    padding: var(--dialog-padding);
+  }
+
+  .ui-dialog-header,
+  .ui-dialog-body {
+    display: grid;
+    gap: 8px;
+  }
+
+  .ui-dialog h2 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .ui-dialog p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .ui-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .ui-dialog-actions form {
+    margin: 0;
+  }
+
+  .ui-dialog-button-ghost {
+    --dialog-button-bg: transparent;
+    --dialog-button-border: var(--color-border);
+    --dialog-button-color: var(--color-text);
+  }
+
+  .ui-dialog-button-confirm {
+    --dialog-button-bg: var(--color-accent);
+    --dialog-button-border: var(--color-accent);
+    --dialog-button-color: #fff;
+  }
+
+  .ui-dialog-danger .ui-dialog-button-confirm {
+    --dialog-button-bg: #d04734;
+    --dialog-button-border: #d04734;
+  }
+</style>

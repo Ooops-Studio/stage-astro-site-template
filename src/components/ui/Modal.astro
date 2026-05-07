@@ -1,0 +1,242 @@
+---
+type Props = {
+  id: string;
+  title?: string;
+  description?: string;
+  eyebrow?: string;
+  triggerLabel?: string;
+  ariaLabel?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  closeLabel?: string;
+  closeOnBackdrop?: boolean;
+  showCloseButton?: boolean;
+  disabled?: boolean;
+  class?: string;
+};
+
+const {
+  id,
+  title,
+  description,
+  eyebrow,
+  triggerLabel,
+  ariaLabel = 'Dialog',
+  size = 'md',
+  closeLabel = 'Close dialog',
+  closeOnBackdrop = true,
+  showCloseButton = true,
+  disabled = false,
+  class: className = ''
+} = Astro.props;
+
+const titleId = title ? `${id}-title` : undefined;
+const descriptionId = description ? `${id}-description` : undefined;
+---
+
+{triggerLabel ? (
+  <button class="ui-modal-trigger" type="button" data-modal-open={id} disabled={disabled}>
+    {triggerLabel}
+  </button>
+) : null}
+
+<dialog
+  id={id}
+  class:list={['ui-modal', `ui-modal-${size}`, className]}
+  aria-label={!title ? ariaLabel : undefined}
+  aria-labelledby={titleId}
+  aria-describedby={descriptionId}
+  data-modal
+  data-close-on-backdrop={closeOnBackdrop ? 'true' : 'false'}
+>
+  <article class="ui-modal-card">
+    {showCloseButton ? (
+      <form method="dialog">
+        <button class="ui-modal-close" value="close" type="submit" aria-label={closeLabel}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </form>
+    ) : null}
+
+    {eyebrow || title || description ? (
+      <header class="ui-modal-header">
+        {eyebrow ? <p class="ui-modal-eyebrow">{eyebrow}</p> : null}
+        {title ? <h2 id={titleId}>{title}</h2> : null}
+        {description ? <p id={descriptionId}>{description}</p> : null}
+      </header>
+    ) : null}
+
+    <div class="ui-modal-body">
+      <slot />
+    </div>
+
+    <slot name="footer" />
+  </article>
+</dialog>
+
+<script>
+  // @ts-nocheck
+  document.querySelectorAll('[data-modal]').forEach((dialog) => {
+    if (!(dialog instanceof HTMLDialogElement) || dialog.dataset.modalReady === 'true') return;
+    dialog.dataset.modalReady = 'true';
+
+    let opener = null;
+
+    const openModal = (trigger) => {
+      opener = trigger instanceof HTMLElement ? trigger : document.activeElement;
+      if (!dialog.open) dialog.showModal();
+    };
+
+    document.querySelectorAll(`[data-modal-open="${CSS.escape(dialog.id)}"]`).forEach((trigger) => {
+      trigger.addEventListener('click', () => openModal(trigger));
+    });
+
+    dialog.addEventListener('click', (event) => {
+      if (dialog.dataset.closeOnBackdrop !== 'true') return;
+      if (event.target === dialog) dialog.close('backdrop');
+    });
+
+    dialog.addEventListener('close', () => {
+      dialog.dispatchEvent(
+        new CustomEvent('modal:close', {
+          bubbles: true,
+          detail: { value: dialog.returnValue || 'close', dialog }
+        })
+      );
+      if (opener instanceof HTMLElement && document.contains(opener)) opener.focus();
+    });
+  });
+</script>
+
+<style>
+  .ui-modal-trigger {
+    min-height: 40px;
+    padding-inline: 16px;
+    border: 1px solid var(--modal-trigger-border, var(--color-border));
+    border-radius: var(--modal-trigger-radius, 999px);
+    background: var(--modal-trigger-bg, var(--color-surface));
+    color: var(--modal-trigger-color, var(--color-text));
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .ui-modal-trigger:focus-visible {
+    outline: 3px solid var(--modal-focus, color-mix(in srgb, var(--color-accent) 28%, transparent));
+    outline-offset: 3px;
+  }
+
+  .ui-modal-trigger:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
+  }
+
+  .ui-modal {
+    --modal-radius: 14px;
+    --modal-padding: 24px;
+    --modal-backdrop: rgb(25 24 23 / 42%);
+    --modal-shadow: 0 22px 80px rgb(0 0 0 / 20%);
+
+    width: var(--modal-width);
+    max-width: calc(100vw - 32px);
+    max-height: min(760px, calc(100vh - 32px));
+    padding: 0;
+    border: 1px solid var(--modal-border, var(--color-border));
+    border-radius: var(--modal-radius);
+    background: var(--modal-bg, var(--color-surface));
+    color: var(--color-text);
+    box-shadow: var(--modal-shadow);
+  }
+
+  .ui-modal-sm {
+    --modal-width: 420px;
+  }
+
+  .ui-modal-md {
+    --modal-width: 580px;
+  }
+
+  .ui-modal-lg {
+    --modal-width: 760px;
+  }
+
+  .ui-modal-xl {
+    --modal-width: 960px;
+  }
+
+  .ui-modal::backdrop {
+    background: var(--modal-backdrop);
+    backdrop-filter: blur(var(--modal-backdrop-blur, 8px));
+  }
+
+  .ui-modal-card {
+    position: relative;
+    display: grid;
+    gap: 20px;
+    max-height: inherit;
+    padding: var(--modal-padding);
+    overflow: auto;
+  }
+
+  .ui-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-muted);
+    cursor: pointer;
+  }
+
+  .ui-modal-close svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .ui-modal-close:focus-visible {
+    outline: 3px solid var(--modal-focus, color-mix(in srgb, var(--color-accent) 28%, transparent));
+    outline-offset: 3px;
+  }
+
+  .ui-modal-header {
+    display: grid;
+    gap: 8px;
+    padding-right: 44px;
+  }
+
+  .ui-modal-eyebrow {
+    color: var(--color-accent);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .ui-modal h2,
+  .ui-modal p {
+    margin: 0;
+  }
+
+  .ui-modal h2 {
+    font-size: 28px;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .ui-modal p {
+    color: var(--color-muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .ui-modal-body {
+    display: grid;
+    gap: 16px;
+  }
+</style>
