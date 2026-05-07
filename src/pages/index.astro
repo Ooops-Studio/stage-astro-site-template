@@ -1,4 +1,6 @@
 ---
+import Button from '../components/ui/Button.astro';
+import Section from '../components/ui/Section.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getHome } from '../lib/stage/homepage';
 
@@ -6,14 +8,14 @@ const home = await getHome();
 ---
 
 <BaseLayout seo={home.seo}>
-  <section class="hero">
+  <Section spacing="lg" class="hero">
     <span class="eyebrow">Stage CMS + Astro</span>
     <h1>{home.heading}</h1>
     <p>{home.description}</p>
-    <a class="button" href="https://github.com/Ooops-Studio/stage-astro-site-template">Use template</a>
-  </section>
+    <Button href="https://github.com/Ooops-Studio/stage-astro-site-template" target="_blank">Use template</Button>
+  </Section>
 
-  <section class="section" id="backbone">
+  <Section id="backbone">
     <div class="card">
       <span class="meta">Backbone</span>
       <h2>One Stage single type powers this page.</h2>
@@ -23,5 +25,5 @@ const home = await getHome();
         <code>seoDescription</code>.
       </p>
     </div>
-  </section>
+  </Section>
 </BaseLayout>

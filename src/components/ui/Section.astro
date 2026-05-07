@@ -1,0 +1,32 @@
+---
+type Props = {
+  spacing?: 'sm' | 'md' | 'lg';
+  id?: string;
+  class?: string;
+};
+
+const { spacing = 'md', id, class: className = '' } = Astro.props;
+const classes = ['ui-section', `ui-section-${spacing}`, className].filter(Boolean).join(' ');
+---
+
+<section id={id} class={classes}>
+  <slot />
+</section>
+
+<style>
+  .ui-section {
+    padding-block: var(--section-spacing);
+  }
+
+  .ui-section-sm {
+    --section-spacing: 32px;
+  }
+
+  .ui-section-md {
+    --section-spacing: 56px;
+  }
+
+  .ui-section-lg {
+    --section-spacing: 88px;
+  }
+</style>

@@ -1,0 +1,108 @@
+---
+type Props = {
+  id: string;
+  name?: string;
+  label?: string;
+  description?: string;
+  error?: string;
+  value?: string;
+  placeholder?: string;
+  rows?: number;
+  required?: boolean;
+  disabled?: boolean;
+  readonly?: boolean;
+  class?: string;
+};
+
+const {
+  id,
+  name = id,
+  label,
+  description,
+  error,
+  value = '',
+  placeholder,
+  rows = 5,
+  required = false,
+  disabled = false,
+  readonly = false,
+  class: className = ''
+} = Astro.props;
+
+const descriptionId = description ? `${id}-description` : undefined;
+const errorId = error ? `${id}-error` : undefined;
+const describedBy = [descriptionId, errorId].filter(Boolean).join(' ') || undefined;
+---
+
+<label class:list={['ui-field', className]} for={id}>
+  {label ? <span class="ui-field-label">{label}</span> : null}
+  {description ? <span id={descriptionId} class="ui-field-description">{description}</span> : null}
+  <textarea
+    id={id}
+    name={name}
+    rows={rows}
+    placeholder={placeholder}
+    required={required}
+    disabled={disabled}
+    readonly={readonly}
+    aria-invalid={error ? 'true' : undefined}
+    aria-describedby={describedBy}
+  >{value}</textarea>
+  {error ? <span id={errorId} class="ui-field-error">{error}</span> : null}
+</label>
+
+<style>
+  .ui-field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .ui-field-label {
+    color: var(--color-text);
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .ui-field-description,
+  .ui-field-error {
+    color: var(--color-muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .ui-field-error {
+    color: #af2c1a;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--input-radius, 8px);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    line-height: 1.5;
+    resize: vertical;
+  }
+
+  textarea::placeholder {
+    color: color-mix(in srgb, var(--color-muted) 75%, transparent);
+  }
+
+  textarea:focus {
+    border-color: var(--color-accent);
+    outline: 3px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
+    outline-offset: 0;
+  }
+
+  textarea[aria-invalid='true'] {
+    border-color: #d04734;
+  }
+
+  textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>

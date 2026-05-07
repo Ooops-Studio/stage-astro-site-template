@@ -1,0 +1,110 @@
+---
+type Option = {
+  label: string;
+  value: string;
+  disabled?: boolean;
+};
+
+type Props = {
+  id: string;
+  name?: string;
+  label?: string;
+  description?: string;
+  error?: string;
+  value?: string;
+  placeholder?: string;
+  options?: Option[];
+  required?: boolean;
+  disabled?: boolean;
+  class?: string;
+};
+
+const {
+  id,
+  name = id,
+  label,
+  description,
+  error,
+  value,
+  placeholder,
+  options = [],
+  required = false,
+  disabled = false,
+  class: className = ''
+} = Astro.props;
+
+const descriptionId = description ? `${id}-description` : undefined;
+const errorId = error ? `${id}-error` : undefined;
+const describedBy = [descriptionId, errorId].filter(Boolean).join(' ') || undefined;
+---
+
+<label class:list={['ui-field', className]} for={id}>
+  {label ? <span class="ui-field-label">{label}</span> : null}
+  {description ? <span id={descriptionId} class="ui-field-description">{description}</span> : null}
+  <select
+    id={id}
+    name={name}
+    required={required}
+    disabled={disabled}
+    aria-invalid={error ? 'true' : undefined}
+    aria-describedby={describedBy}
+  >
+    {placeholder ? <option value="" selected={!value} disabled={required}>{placeholder}</option> : null}
+    {options.map((option) => (
+      <option value={option.value} selected={option.value === value} disabled={option.disabled}>
+        {option.label}
+      </option>
+    ))}
+  </select>
+  {error ? <span id={errorId} class="ui-field-error">{error}</span> : null}
+</label>
+
+<style>
+  .ui-field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .ui-field-label {
+    color: var(--color-text);
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .ui-field-description,
+  .ui-field-error {
+    color: var(--color-muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .ui-field-error {
+    color: #af2c1a;
+  }
+
+  select {
+    width: 100%;
+    min-height: 44px;
+    padding-inline: 14px 36px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--input-radius, 8px);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+  }
+
+  select:focus {
+    border-color: var(--color-accent);
+    outline: 3px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
+    outline-offset: 0;
+  }
+
+  select[aria-invalid='true'] {
+    border-color: #d04734;
+  }
+
+  select:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>

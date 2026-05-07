@@ -12,6 +12,14 @@ src/
     sitemap.xml.ts
   layouts/
     BaseLayout.astro
+  components/
+    ui/
+      Button.astro
+      Container.astro
+      InputField.astro
+      SelectField.astro
+      Section.astro
+      TextareaField.astro
   lib/
     stage/
       client.ts
@@ -33,8 +41,22 @@ optional/
 - One Stage single type, `homepage`.
 - Basic SEO helper, `robots.txt`, and `sitemap.xml`.
 - Fixture fallback when Stage env vars are missing.
+- Small copy-editable Astro UI primitives.
 
 Optional examples live in `optional/`. Copy them into `src/` only if you need them.
+
+## UI Primitives
+
+The template includes neutral Astro primitives in `src/components/ui`:
+
+- `Button.astro`
+- `Container.astro`
+- `Section.astro`
+- `InputField.astro`
+- `TextareaField.astro`
+- `SelectField.astro`
+
+They are intentionally local to the template, not an npm design system. Edit or delete them to match the site.
 
 ## Quick Start
 
