@@ -1,0 +1,32 @@
+---
+import NewsletterForm from '../components/NewsletterForm.svelte';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getHome, getPosts } from '../lib/stage/client';
+
+const [home, posts] = await Promise.all([getHome(), getPosts()]);
+---
+
+<BaseLayout seo={home.seo}>
+  <section class="hero">
+    <span class="eyebrow">Stage CMS + Astro</span>
+    <h1>{home.title}</h1>
+    <p>{home.description}</p>
+    <a class="button" href="#posts">Browse posts</a>
+  </section>
+
+  <section class="section" id="posts">
+    <div class="grid">
+      {posts.map((post) => (
+        <a class="card" href={`/posts/${post.slug}`}>
+          <span class="meta">{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('en') : 'Post'}</span>
+          <h2>{post.title}</h2>
+          <p>{post.excerpt}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="section">
+    <NewsletterForm client:load />
+  </section>
+</BaseLayout>

@@ -1,0 +1,42 @@
+---
+import '../styles.css';
+import type { SeoPayload } from '../lib/stage/types';
+
+type Props = {
+  seo: SeoPayload;
+};
+
+const { seo } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{seo.title}</title>
+    <meta name="description" content={seo.description} />
+    <link rel="canonical" href={seo.canonical} />
+    <meta property="og:title" content={seo.title} />
+    <meta property="og:description" content={seo.description} />
+    <meta property="og:url" content={seo.canonical} />
+    {seo.ogImage ? <meta property="og:image" content={seo.ogImage} /> : null}
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="site-brand" href="/">Stage Astro Site</a>
+        <nav class="site-nav" aria-label="Primary">
+          <a href="/">Home</a>
+          <a href="/posts/hello-stage">Example post</a>
+        </nav>
+      </header>
+      <main>
+        <slot />
+      </main>
+      <footer class="site-footer">
+        Powered by Stage CMS and Astro.
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+.astro/
+dist/
+node_modules/
+.svelte-kit/
+.playwright-cli/
+.env
+.env.*
+!.env.example
+
+.DS_Store
+npm-debug.log*
