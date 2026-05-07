@@ -16,7 +16,6 @@ src/
     ui/
       Button.astro
       Container.astro
-      CustomSelectField.astro
       InputField.astro
       SelectField.astro
       Section.astro
@@ -56,11 +55,10 @@ The template includes neutral Astro primitives in `src/components/ui`:
 - `InputField.astro`
 - `TextareaField.astro`
 - `SelectField.astro`
-- `CustomSelectField.astro`
 
 They are intentionally local to the template, not an npm design system. Edit or delete them to match the site.
 
-Use `SelectField.astro` when native browser behavior is enough. Use `CustomSelectField.astro` when you need a searchable grouped listbox, option icons, async filtering, portal positioning, and richer open/close keyboard behavior.
+`SelectField.astro` is the custom select primitive. It includes a searchable grouped listbox, option icons, async filtering, portal positioning, and richer open/close keyboard behavior.
 
 ## Quick Start
 

@@ -24,6 +24,7 @@ const { seo } = Astro.props;
     {seo.ogImage ? <meta property="og:image" content={seo.ogImage} /> : null}
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <Container>
       <header class="site-header">
         <a class="site-brand" href="/">Stage Astro Site</a>
@@ -32,7 +33,7 @@ const { seo } = Astro.props;
           <a href="https://github.com/Ooops-Studio/stage-astro-site-template">Template</a>
         </nav>
       </header>
-      <main>
+      <main id="main-content" tabindex="-1">
         <slot />
       </main>
       <footer class="site-footer">
