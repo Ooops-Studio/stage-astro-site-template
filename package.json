@@ -11,9 +11,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/svelte": "^7.2.1",
-    "astro": "^5.16.3",
-    "svelte": "^5.39.8"
+    "astro": "^5.16.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",

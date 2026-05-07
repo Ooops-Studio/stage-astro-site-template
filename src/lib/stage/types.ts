@@ -6,20 +6,7 @@ export type SeoPayload = {
 };
 
 export type HomepageContent = {
-  title: string;
+  heading: string;
   description: string;
-  seo: SeoPayload;
-};
-
-export type PostSummary = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  publishedAt: string | null;
-};
-
-export type PostDetail = PostSummary & {
-  body: string;
   seo: SeoPayload;
 };

@@ -1,13 +1,40 @@
 # Stage Astro Site Template
 
-Astro starter for public websites powered by Stage CMS.
+Astro template for public websites powered by Stage CMS.
 
-The template is intentionally small:
+The active app is intentionally small and familiar to Astro users:
 
-- Static Astro pages for CMS content.
-- Server/build-time Stage API v1 reads with a private API token.
-- Browser-side public form submissions with a public form token.
-- Optional Cloudflare Pages deploy hook endpoint for production rebuilds.
+```txt
+src/
+  pages/
+    index.astro
+    robots.txt.ts
+    sitemap.xml.ts
+  layouts/
+    BaseLayout.astro
+  lib/
+    stage/
+      client.ts
+      env.ts
+      homepage.ts
+      seo.ts
+      types.ts
+  styles.css
+optional/
+  posts/
+  newsletter/
+  cloudflare-rebuild/
+```
+
+## What Is Active By Default
+
+- Static Astro homepage.
+- Build-time Stage API v1 reads with a private `STAGE_API_TOKEN`.
+- One Stage single type, `homepage`.
+- Basic SEO helper, `robots.txt`, and `sitemap.xml`.
+- Fixture fallback when Stage env vars are missing.
+
+Optional examples live in `optional/`. Copy them into `src/` only if you need them.
 
 ## Quick Start
 
@@ -22,39 +49,57 @@ Set these values in `.env.local`:
 ```env
 STAGE_API_BASE_URL=http://stage.localhost:4275/api/stage/v1
 STAGE_API_TOKEN=your_private_stage_api_token
-PUBLIC_STAGE_API_BASE_URL=http://stage.localhost:4275
-PUBLIC_NEWSLETTER_FORM_TOKEN=your_public_form_token
 PUBLIC_SITE_URL=http://localhost:4321
 ```
 
 ## Expected Stage Content
 
-The starter uses two example CMS contracts:
+Create a Stage single type with API id `homepage`.
 
-- Single type `homepage`
-  - `title`
-  - `description`
-  - `seoTitle`
-  - `seoDescription`
+Recommended fields:
 
-- Collection type `posts`
-  - `title`
-  - `slug`
-  - `excerpt`
-  - `body`
-  - `publishedAt`
-  - `seoTitle`
-  - `seoDescription`
+- `heading`
+- `description`
+- `seoTitle`
+- `seoDescription`
+- `ogImage` optional
 
-You can rename these API ids and fields in `src/lib/stage/client.ts`.
+You can rename the API id and fields in `src/lib/stage/homepage.ts`.
 
-## Deployment
+## Optional Posts Collection
 
-For Cloudflare Pages:
+Use `optional/posts` if you want a collection example.
 
-1. Add the env vars from `.env.example`.
-2. Set `PUBLIC_SITE_URL` to your production domain.
-3. Create a Pages deploy hook and add it as `CLOUDFLARE_PAGES_DEPLOY_HOOK_URL`.
-4. Configure a Stage webhook to call `/api/stage/rebuild` with `STAGE_WEBHOOK_SECRET`.
+It demonstrates:
 
-Private values such as `STAGE_API_TOKEN`, `CLOUDFLARE_PAGES_DEPLOY_HOOK_URL`, and `STAGE_WEBHOOK_SECRET` must never be exposed to browser code.
+- `/posts/[slug]` static pages.
+- Stage collection API reads.
+- Per-post SEO.
+
+Expected collection API id: `posts`.
+
+## Optional Newsletter Form
+
+Use `optional/newsletter` if you want browser-side public form submissions.
+
+It demonstrates posting to:
+
+```txt
+/api/stage/public/forms/{token}/submissions
+```
+
+No private Stage API token is exposed to the browser.
+
+## Optional Cloudflare Pages Rebuild
+
+Use `optional/cloudflare-rebuild` if you deploy to Cloudflare Pages and want Stage webhooks to trigger rebuilds.
+
+This is not active by default because it is deployment-specific.
+
+## Private Env Vars
+
+Never expose these to browser code:
+
+- `STAGE_API_TOKEN`
+- `CLOUDFLARE_PAGES_DEPLOY_HOOK_URL`
+- `STAGE_WEBHOOK_SECRET`

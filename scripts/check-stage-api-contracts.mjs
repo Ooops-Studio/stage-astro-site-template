@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 
-const source = readFileSync(new URL('../src/lib/stage/client.ts', import.meta.url), 'utf8');
+const source = [
+  readFileSync(new URL('../src/lib/stage/client.ts', import.meta.url), 'utf8'),
+  readFileSync(new URL('../src/lib/stage/homepage.ts', import.meta.url), 'utf8')
+].join('\n');
 const forbidden = ['/api/public/content', '/api/public/site'];
 
 const hit = forbidden.find((path) => source.includes(path));
@@ -9,8 +12,8 @@ if (hit) {
   process.exit(1);
 }
 
-if (!source.includes('/content/singles/') || !source.includes('/content/collections/')) {
-  console.error('[stage-api-contracts] Expected Stage API v1 content paths were not found.');
+if (!source.includes('/content/singles/')) {
+  console.error('[stage-api-contracts] Expected Stage API v1 single-type path was not found.');
   process.exit(1);
 }
 

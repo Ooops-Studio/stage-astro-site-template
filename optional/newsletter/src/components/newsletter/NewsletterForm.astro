@@ -1,0 +1,108 @@
+<form class="newsletter" data-newsletter-form>
+  <label for="newsletter-email">Newsletter</label>
+  <div class="newsletter-row">
+    <input
+      id="newsletter-email"
+      name="email"
+      type="email"
+      autocomplete="email"
+      placeholder="you@example.com"
+      required
+    />
+    <button class="button" type="submit">Subscribe</button>
+  </div>
+  <p data-newsletter-message hidden></p>
+</form>
+
+<script>
+  const form = document.querySelector('[data-newsletter-form]');
+  const message = form?.querySelector('[data-newsletter-message]');
+  const button = form?.querySelector('button[type="submit"]');
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!(form instanceof HTMLFormElement)) return;
+
+    const formData = new FormData(form);
+    const email = String(formData.get('email') || '').trim();
+    if (!email) return;
+
+    const baseUrl = import.meta.env.PUBLIC_STAGE_API_BASE_URL?.replace(/\/$/, '') || '';
+    const token = import.meta.env.PUBLIC_NEWSLETTER_FORM_TOKEN || '';
+
+    if (!baseUrl || !token) {
+      if (message) {
+        message.hidden = false;
+        message.textContent = 'Newsletter form is not configured yet.';
+      }
+      return;
+    }
+
+    button?.setAttribute('disabled', 'true');
+
+    const response = await fetch(`${baseUrl}/api/stage/public/forms/${token}/submissions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ answers: { email } })
+    });
+
+    button?.removeAttribute('disabled');
+    if (message) {
+      message.hidden = false;
+      message.textContent = response.ok ? 'Thanks. You are on the list.' : 'The submission failed. Please try again.';
+    }
+    if (response.ok) form.reset();
+  });
+</script>
+
+<style>
+  .newsletter {
+    display: grid;
+    gap: 12px;
+    max-width: 560px;
+    padding: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+  }
+
+  label {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .newsletter-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  input {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--color-text);
+    font: inherit;
+  }
+
+  button {
+    border: 0;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: wait;
+    opacity: 0.7;
+  }
+
+  @media (max-width: 640px) {
+    .newsletter-row {
+      align-items: stretch;
+      flex-direction: column;
+    }
+  }
+</style>

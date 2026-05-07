@@ -1,10 +1,8 @@
 import type { APIRoute } from 'astro';
-import { getPosts } from '../lib/stage/client';
 
 export const GET: APIRoute = async () => {
   const siteUrl = (import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321').replace(/\/$/, '');
-  const posts = await getPosts();
-  const urls = ['/', ...posts.map((post) => `/posts/${post.slug}`)];
+  const urls = ['/'];
 
   return new Response(
     `<?xml version="1.0" encoding="UTF-8"?>\n` +

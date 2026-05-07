@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getPost, getPosts } from '../../lib/stage/client';
+import { getPost, getPosts } from '../../lib/posts/client';
 
 export const getStaticPaths = async () => {
   const posts = await getPosts();
