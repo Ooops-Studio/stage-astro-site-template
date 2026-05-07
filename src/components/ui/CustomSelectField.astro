@@ -1,0 +1,585 @@
+---
+type SelectOption = {
+  label: string;
+  value: string;
+  disabled?: boolean;
+  group?: string;
+  icon?: string;
+  iconUrl?: string;
+  description?: string;
+};
+
+type Props = {
+  id: string;
+  name?: string;
+  label?: string;
+  description?: string;
+  error?: string;
+  value?: string;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  options?: SelectOption[];
+  asyncEndpoint?: string;
+  required?: boolean;
+  disabled?: boolean;
+  class?: string;
+};
+
+const {
+  id,
+  name = id,
+  label,
+  description,
+  error,
+  value = '',
+  placeholder = 'Select an option',
+  searchPlaceholder = 'Search options',
+  options = [],
+  asyncEndpoint,
+  required = false,
+  disabled = false,
+  class: className = ''
+} = Astro.props;
+
+const selectedOption = options.find((option) => option.value === value);
+const descriptionId = description ? `${id}-description` : undefined;
+const errorId = error ? `${id}-error` : undefined;
+const listboxId = `${id}-listbox`;
+const configId = `${id}-config`;
+const describedBy = [descriptionId, errorId].filter(Boolean).join(' ') || undefined;
+const config = {
+  id,
+  name,
+  value,
+  placeholder,
+  searchPlaceholder,
+  options,
+  asyncEndpoint,
+  required,
+  disabled,
+  listboxId
+};
+---
+
+<div class:list={['ui-custom-select-field', className]} data-custom-select-root={id}>
+  {label ? <label class="ui-field-label" for={`${id}-trigger`}>{label}</label> : null}
+  {description ? <span id={descriptionId} class="ui-field-description">{description}</span> : null}
+  <input type="hidden" name={name} value={value} required={required} data-custom-select-value />
+  <button
+    id={`${id}-trigger`}
+    class="ui-custom-select-trigger"
+    type="button"
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-controls={listboxId}
+    aria-describedby={describedBy}
+    aria-invalid={error ? 'true' : undefined}
+    disabled={disabled}
+    data-custom-select-trigger
+  >
+    <span class="ui-custom-select-current" data-custom-select-current>
+      {selectedOption?.icon ? <span class="ui-custom-select-icon" aria-hidden="true">{selectedOption.icon}</span> : null}
+      {selectedOption?.iconUrl ? <img class="ui-custom-select-image" src={selectedOption.iconUrl} alt="" loading="lazy" /> : null}
+      <span>{selectedOption?.label || placeholder}</span>
+    </span>
+    <span class="ui-custom-select-chevron" aria-hidden="true">⌄</span>
+  </button>
+  {error ? <span id={errorId} class="ui-field-error">{error}</span> : null}
+  <script is:inline type="application/json" id={configId} data-custom-select-config set:html={JSON.stringify(config)} />
+</div>
+
+<script>
+  // @ts-nocheck
+  const escapeHtml = (value) =>
+    String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+
+  const normalizeOptions = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.items)) return value.items;
+    if (value && Array.isArray(value.options)) return value.options;
+    return [];
+  };
+
+  const debounce = (callback, wait) => {
+    let timer = 0;
+    return (...args) => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => callback(...args), wait);
+    };
+  };
+
+  const createMenu = (config) => {
+    const menu = document.createElement('div');
+    menu.className = 'ui-custom-select-menu';
+    menu.id = config.listboxId;
+    menu.dataset.customSelectMenu = config.id;
+    menu.innerHTML = `
+      <div class="ui-custom-select-search-row">
+        <input class="ui-custom-select-search" type="search" placeholder="${escapeHtml(config.searchPlaceholder)}" autocomplete="off" />
+      </div>
+      <div class="ui-custom-select-state" data-custom-select-state hidden></div>
+      <div class="ui-custom-select-options" role="listbox" tabindex="-1"></div>
+    `;
+    document.body.append(menu);
+    return menu;
+  };
+
+  const mountCustomSelect = (root, config) => {
+    const trigger = root.querySelector('[data-custom-select-trigger]');
+    const hiddenInput = root.querySelector('[data-custom-select-value]');
+    const current = root.querySelector('[data-custom-select-current]');
+    if (!trigger || !hiddenInput || !current) return;
+
+    let options = normalizeOptions(config.options);
+    let filteredOptions = options;
+    let selectedValue = config.value || '';
+    let activeIndex = -1;
+    let open = false;
+    let loadingController = null;
+    const menu = createMenu(config);
+    const searchInput = menu.querySelector('.ui-custom-select-search');
+    const state = menu.querySelector('[data-custom-select-state]');
+    const listbox = menu.querySelector('.ui-custom-select-options');
+
+    const selectedOption = () => options.find((option) => option.value === selectedValue) || null;
+
+    const setState = (message) => {
+      if (!state) return;
+      state.hidden = !message;
+      state.textContent = message || '';
+    };
+
+    const groupedOptions = (items) => {
+      const groups = new Map();
+      for (const option of items) {
+        const group = option.group || '';
+        if (!groups.has(group)) groups.set(group, []);
+        groups.get(group).push(option);
+      }
+      return groups;
+    };
+
+    const optionTemplate = (option, index) => {
+      const selected = option.value === selectedValue;
+      const disabled = Boolean(option.disabled);
+      const icon = option.icon
+        ? `<span class="ui-custom-select-option-icon" aria-hidden="true">${escapeHtml(option.icon)}</span>`
+        : option.iconUrl
+          ? `<img class="ui-custom-select-option-image" src="${escapeHtml(option.iconUrl)}" alt="" loading="lazy" />`
+          : '';
+      const description = option.description
+        ? `<span class="ui-custom-select-option-description">${escapeHtml(option.description)}</span>`
+        : '';
+
+      return `
+        <button
+          class="ui-custom-select-option"
+          type="button"
+          role="option"
+          data-option-index="${index}"
+          data-option-value="${escapeHtml(option.value)}"
+          aria-selected="${selected ? 'true' : 'false'}"
+          ${disabled ? 'disabled aria-disabled="true"' : ''}
+        >
+          ${icon}
+          <span class="ui-custom-select-option-text">
+            <span>${escapeHtml(option.label)}</span>
+            ${description}
+          </span>
+          ${selected ? '<span class="ui-custom-select-check" aria-hidden="true">✓</span>' : ''}
+        </button>
+      `;
+    };
+
+    const renderCurrent = () => {
+      const option = selectedOption();
+      if (!option) {
+        current.innerHTML = `<span>${escapeHtml(config.placeholder)}</span>`;
+        hiddenInput.value = '';
+        return;
+      }
+
+      const icon = option.icon
+        ? `<span class="ui-custom-select-icon" aria-hidden="true">${escapeHtml(option.icon)}</span>`
+        : option.iconUrl
+          ? `<img class="ui-custom-select-image" src="${escapeHtml(option.iconUrl)}" alt="" loading="lazy" />`
+          : '';
+      current.innerHTML = `${icon}<span>${escapeHtml(option.label)}</span>`;
+      hiddenInput.value = option.value;
+    };
+
+    const renderOptions = () => {
+      if (!listbox) return;
+      if (!filteredOptions.length) {
+        listbox.innerHTML = '';
+        setState('No options found.');
+        return;
+      }
+
+      setState('');
+      let index = 0;
+      const html = [...groupedOptions(filteredOptions).entries()]
+        .map(([group, groupOptions]) => {
+          const heading = group ? `<div class="ui-custom-select-group">${escapeHtml(group)}</div>` : '';
+          const items = groupOptions.map((option) => optionTemplate(option, index++)).join('');
+          return `${heading}${items}`;
+        })
+        .join('');
+      listbox.innerHTML = html;
+
+      listbox.querySelectorAll('[data-option-index]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const option = filteredOptions[Number(button.dataset.optionIndex)];
+          if (option && !option.disabled) selectOption(option);
+        });
+      });
+    };
+
+    const positionMenu = () => {
+      const rect = trigger.getBoundingClientRect();
+      const gap = 8;
+      const maxHeight = Math.min(360, window.innerHeight - rect.bottom - gap - 12);
+      menu.style.minWidth = `${rect.width}px`;
+      menu.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - rect.width - 12))}px`;
+      menu.style.top = `${rect.bottom + gap}px`;
+      menu.style.maxHeight = `${Math.max(220, maxHeight)}px`;
+    };
+
+    const setActive = (index) => {
+      const optionButtons = [...menu.querySelectorAll('.ui-custom-select-option:not([disabled])')];
+      if (!optionButtons.length) {
+        activeIndex = -1;
+        return;
+      }
+      activeIndex = (index + optionButtons.length) % optionButtons.length;
+      optionButtons.forEach((button, buttonIndex) => {
+        button.dataset.active = buttonIndex === activeIndex ? 'true' : 'false';
+      });
+      optionButtons[activeIndex]?.scrollIntoView({ block: 'nearest' });
+    };
+
+    const closeMenu = ({ restoreFocus = true } = {}) => {
+      if (!open) return;
+      open = false;
+      menu.dataset.open = 'false';
+      trigger.setAttribute('aria-expanded', 'false');
+      window.removeEventListener('resize', positionMenu);
+      window.removeEventListener('scroll', positionMenu, true);
+      document.removeEventListener('pointerdown', onDocumentPointerDown, true);
+      if (restoreFocus) trigger.focus();
+    };
+
+    const openMenu = () => {
+      if (open || config.disabled) return;
+      open = true;
+      filteredOptions = options;
+      activeIndex = -1;
+      renderOptions();
+      positionMenu();
+      menu.dataset.open = 'true';
+      trigger.setAttribute('aria-expanded', 'true');
+      window.addEventListener('resize', positionMenu);
+      window.addEventListener('scroll', positionMenu, true);
+      document.addEventListener('pointerdown', onDocumentPointerDown, true);
+      requestAnimationFrame(() => searchInput?.focus());
+    };
+
+    const selectOption = (option) => {
+      selectedValue = option.value;
+      renderCurrent();
+      renderOptions();
+      hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+      root.dispatchEvent(new CustomEvent('custom-select:change', { bubbles: true, detail: { option } }));
+      closeMenu();
+    };
+
+    const filterLocalOptions = (query) => {
+      const normalizedQuery = query.trim().toLowerCase();
+      filteredOptions = normalizedQuery
+        ? options.filter((option) =>
+            [option.label, option.value, option.group, option.description]
+              .filter(Boolean)
+              .some((value) => String(value).toLowerCase().includes(normalizedQuery))
+          )
+        : options;
+      activeIndex = -1;
+      renderOptions();
+    };
+
+    const loadAsyncOptions = debounce(async (query) => {
+      if (!config.asyncEndpoint) return;
+      loadingController?.abort();
+      loadingController = new AbortController();
+      setState('Loading...');
+
+      try {
+        const url = new URL(config.asyncEndpoint, window.location.origin);
+        if (query.trim()) url.searchParams.set('q', query.trim());
+        const response = await fetch(url, { signal: loadingController.signal, headers: { accept: 'application/json' } });
+        if (!response.ok) throw new Error(`Request failed with ${response.status}`);
+        const payload = await response.json();
+        options = normalizeOptions(payload);
+        filteredOptions = options;
+        activeIndex = -1;
+        renderOptions();
+      } catch (error) {
+        if (error?.name === 'AbortError') return;
+        setState('Could not load options.');
+      }
+    }, 180);
+
+    const onDocumentPointerDown = (event) => {
+      if (root.contains(event.target) || menu.contains(event.target)) return;
+      closeMenu({ restoreFocus: false });
+    };
+
+    trigger.addEventListener('click', () => {
+      if (open) closeMenu();
+      else openMenu();
+    });
+
+    trigger.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openMenu();
+      }
+    });
+
+    searchInput?.addEventListener('input', () => {
+      const query = searchInput.value;
+      if (config.asyncEndpoint) loadAsyncOptions(query);
+      else filterLocalOptions(query);
+    });
+
+    menu.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMenu();
+      }
+      if (event.key === 'Tab') {
+        closeMenu({ restoreFocus: false });
+      }
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        setActive(activeIndex + 1);
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        setActive(activeIndex - 1);
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const activeButton = menu.querySelector('.ui-custom-select-option[data-active="true"]');
+        activeButton?.click();
+      }
+    });
+
+    renderCurrent();
+    renderOptions();
+  };
+
+  document.querySelectorAll('[data-custom-select-root]').forEach((root) => {
+    const configEl = root.querySelector('[data-custom-select-config]');
+    if (!configEl?.textContent || root.dataset.customSelectReady === 'true') return;
+    root.dataset.customSelectReady = 'true';
+    mountCustomSelect(root, JSON.parse(configEl.textContent));
+  });
+</script>
+
+<style is:global>
+  .ui-custom-select-field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .ui-custom-select-field .ui-field-label {
+    color: var(--color-text);
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .ui-custom-select-field .ui-field-description,
+  .ui-custom-select-field .ui-field-error {
+    color: var(--color-muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .ui-custom-select-field .ui-field-error {
+    color: #af2c1a;
+  }
+
+  .ui-custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px 0 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--input-radius, 8px);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .ui-custom-select-trigger:focus {
+    border-color: var(--color-accent);
+    outline: 3px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
+    outline-offset: 0;
+  }
+
+  .ui-custom-select-trigger[aria-invalid='true'] {
+    border-color: #d04734;
+  }
+
+  .ui-custom-select-trigger:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  .ui-custom-select-current,
+  .ui-custom-select-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .ui-custom-select-current span:last-child,
+  .ui-custom-select-option-text {
+    overflow: hidden;
+    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ui-custom-select-icon,
+  .ui-custom-select-option-icon,
+  .ui-custom-select-image,
+  .ui-custom-select-option-image {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--color-accent-soft);
+    object-fit: cover;
+  }
+
+  .ui-custom-select-chevron {
+    color: var(--color-muted);
+  }
+
+  .ui-custom-select-menu {
+    position: fixed;
+    z-index: 1000;
+    display: none;
+    overflow: auto;
+    padding: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+    box-shadow: 0 18px 50px rgb(0 0 0 / 16%);
+  }
+
+  .ui-custom-select-menu[data-open='true'] {
+    display: grid;
+    gap: 8px;
+  }
+
+  .ui-custom-select-search-row {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-surface);
+  }
+
+  .ui-custom-select-search {
+    width: 100%;
+    min-height: 40px;
+    padding-inline: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+  }
+
+  .ui-custom-select-search:focus {
+    border-color: var(--color-accent);
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
+  }
+
+  .ui-custom-select-state {
+    padding: 12px;
+    color: var(--color-muted);
+    font-size: 14px;
+  }
+
+  .ui-custom-select-options {
+    display: grid;
+    gap: 2px;
+  }
+
+  .ui-custom-select-group {
+    padding: 12px 8px 6px;
+    color: var(--color-muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .ui-custom-select-option {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .ui-custom-select-option:hover,
+  .ui-custom-select-option[data-active='true'] {
+    background: var(--color-accent-soft);
+  }
+
+  .ui-custom-select-option[aria-selected='true'] {
+    color: var(--color-accent);
+    font-weight: 800;
+  }
+
+  .ui-custom-select-option:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .ui-custom-select-option-text {
+    display: grid;
+    gap: 3px;
+  }
+
+  .ui-custom-select-option-description {
+    color: var(--color-muted);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .ui-custom-select-check {
+    margin-left: auto;
+  }
+</style>
