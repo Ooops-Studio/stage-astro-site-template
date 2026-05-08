@@ -1,8 +1,5 @@
-import {
-  requestStage,
-  type StageCollectionEntryResponse,
-  type StageCollectionResponse
-} from '../stage/client';
+import { getStageCollectionEntries, getStageCollectionEntry } from '../stage/client';
+import { asRecord, asString, mediaAlt, mediaUrl } from '../stage/content-helpers';
 import { seoFromFields } from '../stage/seo';
 import type { SeoPayload } from '../stage/types';
 
@@ -11,19 +8,17 @@ export type PostSummary = {
   title: string;
   slug: string;
   excerpt: string;
+  heroImage: unknown;
+  heroImageUrl: string | null;
+  heroImageAlt: string;
   publishedAt: string | null;
+  updatedAt: string | null;
 };
 
 export type PostDetail = PostSummary & {
   body: string;
   seo: SeoPayload;
 };
-
-const asRecord = (value: unknown): Record<string, unknown> =>
-  value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
-
-const asString = (value: unknown): string =>
-  typeof value === 'string' && value.trim() ? value.trim() : '';
 
 const asDateString = (value: unknown): string | null => {
   if (typeof value !== 'string' || !value.trim()) return null;
@@ -41,7 +36,11 @@ const mapPostSummary = (entry: Record<string, unknown>): PostSummary => {
     title,
     slug,
     excerpt: asString(fields.excerpt),
-    publishedAt: asDateString(fields.publishedAt)
+    heroImage: fields.heroImage,
+    heroImageUrl: mediaUrl(fields.heroImage),
+    heroImageAlt: mediaAlt(fields.heroImage, title),
+    publishedAt: asDateString(fields.publishedAt),
+    updatedAt: asDateString(entry.updatedAt) || asDateString(fields.updatedAt)
   };
 };
 
@@ -62,15 +61,19 @@ const mapPostDetail = (entry: Record<string, unknown>): PostDetail => {
 };
 
 export const getPosts = async (): Promise<PostSummary[]> => {
-  const response = await requestStage<StageCollectionResponse<Record<string, unknown>>>(
-    '/content/collections/posts/entries'
-  );
-  return response?.items.map(mapPostSummary).filter((post) => post.slug) ?? [];
+  const entries = await getStageCollectionEntries('posts');
+  return entries?.map(mapPostSummary).filter((post) => post.slug) ?? [];
 };
 
 export const getPost = async (slug: string): Promise<PostDetail | null> => {
-  const response = await requestStage<StageCollectionEntryResponse<Record<string, unknown>>>(
-    `/content/collections/posts/entries/${encodeURIComponent(slug)}`
-  );
-  return response ? mapPostDetail(response.item) : null;
+  const entry = await getStageCollectionEntry('posts', slug);
+  return entry ? mapPostDetail(entry) : null;
+};
+
+export const getPostSitemapPaths = async () => {
+  const posts = await getPosts();
+  return posts.map((post) => ({
+    path: `/posts/${post.slug}`,
+    lastmod: post.updatedAt || post.publishedAt
+  }));
 };

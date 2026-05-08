@@ -5,16 +5,34 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build",
-    "check": "astro check && npm run check:stage-api-contracts",
+    "build": "npm run typecheck && astro build",
+    "check": "npm run typecheck && npm run check:template",
+    "check:openapi": "node scripts/check-openapi-contract.mjs",
+    "check:template": "node scripts/check-stage-api-contracts.mjs",
     "check:stage-api-contracts": "node scripts/check-stage-api-contracts.mjs",
-    "preview": "astro preview"
+    "example:newsletter-submit": "tsx examples/newsletter-submit.ts",
+    "example:read-content": "tsx examples/read-content.ts",
+    "lint": "eslint . --cache --cache-location .cache/eslint",
+    "preview": "astro preview",
+    "stage:bootstrap": "node scripts/stage-bootstrap.mjs",
+    "test:webhook": "node scripts/test-stage-webhook-signature.mjs",
+    "typecheck": "astro check",
+    "validate": "npm run lint && npm run check && npm run check:openapi && npm run build"
   },
   "dependencies": {
+    "@ooopsstudio/analytics-consent": "^0.1.0",
+    "@ooopsstudio/stage-api": "^0.1.0",
     "astro": "^5.16.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
-    "typescript": "^5.9.3"
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^25.5.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-astro": "^1.3.1",
+    "globals": "^16.4.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.45.0"
   }
 }

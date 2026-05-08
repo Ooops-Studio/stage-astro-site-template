@@ -1,13 +1,8 @@
 import { siteUrl } from './env';
-import { requestStage, type StageSingleResponse } from './client';
+import { getStageSingle } from './client';
+import { asRecord, asString } from './content-helpers';
 import { seoFromFields } from './seo';
 import type { HomepageContent } from './types';
-
-const asRecord = (value: unknown): Record<string, unknown> =>
-  value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
-
-const asString = (value: unknown): string =>
-  typeof value === 'string' && value.trim() ? value.trim() : '';
 
 const fixtureHome = (): HomepageContent => ({
   heading: 'Build a Stage-powered Astro site',
@@ -21,10 +16,10 @@ const fixtureHome = (): HomepageContent => ({
 });
 
 export const getHome = async (): Promise<HomepageContent> => {
-  const response = await requestStage<StageSingleResponse<Record<string, unknown>>>('/content/singles/homepage');
-  if (!response) return fixtureHome();
+  const content = await getStageSingle('homepage');
+  if (!content) return fixtureHome();
 
-  const fields = asRecord(response.content.fields || response.content);
+  const fields = asRecord(content.fields || content);
   const heading = asString(fields.heading) || asString(fields.title) || 'Stage Astro Site';
   const description = asString(fields.description) || 'Public website powered by Stage CMS.';
 

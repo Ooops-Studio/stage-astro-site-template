@@ -1,0 +1,642 @@
+---
+type Props = {
+  position?: 'bottom-left' | 'bottom-right';
+  label?: string;
+};
+
+const { position = 'bottom-left', label = 'Accessibility' } = Astro.props;
+---
+
+<div class:list={['a11y-widget', `a11y-widget-${position}`]} data-a11y-widget>
+  <button
+    class="a11y-trigger"
+    type="button"
+    aria-haspopup="dialog"
+    aria-expanded="false"
+    aria-controls="a11y-panel"
+    aria-label={`Open ${label.toLowerCase()} menu`}
+    data-a11y-trigger
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="4" r="2.2" />
+      <path d="M5 8.4h14M12 6.8v5.7m0 0-4.5 7m4.5-7 4.5 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </button>
+
+  <div class="a11y-overlay" data-a11y-overlay hidden></div>
+  <section
+    id="a11y-panel"
+    class="a11y-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="a11y-title"
+    tabindex="-1"
+    data-a11y-panel
+    hidden
+  >
+    <header class="a11y-header">
+      <div>
+        <span class="a11y-eyebrow">Display tools</span>
+        <h2 id="a11y-title">{label}</h2>
+      </div>
+      <button class="a11y-close" type="button" aria-label={`Close ${label.toLowerCase()} menu`} data-a11y-close>×</button>
+    </header>
+
+    <div class="a11y-grid">
+      <div class="a11y-card a11y-range">
+        <span>Font size</span>
+        <div class="a11y-range-controls">
+          <button type="button" aria-label="Decrease font size" data-a11y-step="fontScale" data-direction="-1">−</button>
+          <strong data-a11y-value="fontScale">100%</strong>
+          <button type="button" aria-label="Increase font size" data-a11y-step="fontScale" data-direction="1">+</button>
+        </div>
+      </div>
+
+      <div class="a11y-card a11y-range">
+        <span>Line height</span>
+        <div class="a11y-range-controls">
+          <button type="button" aria-label="Decrease line height" data-a11y-step="lineHeight" data-direction="-1">−</button>
+          <strong data-a11y-value="lineHeight">100%</strong>
+          <button type="button" aria-label="Increase line height" data-a11y-step="lineHeight" data-direction="1">+</button>
+        </div>
+      </div>
+
+      <div class="a11y-card a11y-range">
+        <span>Letter spacing</span>
+        <div class="a11y-range-controls">
+          <button type="button" aria-label="Decrease letter spacing" data-a11y-step="letterSpacing" data-direction="-1">−</button>
+          <strong data-a11y-value="letterSpacing">100%</strong>
+          <button type="button" aria-label="Increase letter spacing" data-a11y-step="letterSpacing" data-direction="1">+</button>
+        </div>
+      </div>
+
+      <button class="a11y-card a11y-toggle" type="button" aria-pressed="false" data-a11y-toggle="highContrast">
+        <span class="a11y-icon-wrap" aria-hidden="true">◐</span>
+        <span>High contrast</span>
+      </button>
+      <button class="a11y-card a11y-toggle" type="button" aria-pressed="false" data-a11y-toggle="monochrome">
+        <span class="a11y-icon-wrap" aria-hidden="true">●</span>
+        <span>Monochrome</span>
+      </button>
+      <button class="a11y-card a11y-toggle" type="button" aria-pressed="false" data-a11y-toggle="highlightTitles">
+        <span class="a11y-icon-wrap" aria-hidden="true">H</span>
+        <span>Highlight titles</span>
+      </button>
+      <button class="a11y-card a11y-toggle" type="button" aria-pressed="false" data-a11y-toggle="highlightLinks">
+        <span class="a11y-icon-wrap" aria-hidden="true">↗</span>
+        <span>Highlight links</span>
+      </button>
+      <button class="a11y-card a11y-toggle" type="button" aria-pressed="false" data-a11y-toggle="largeCursor">
+        <span class="a11y-icon-wrap" aria-hidden="true">⌖</span>
+        <span>Large cursor</span>
+      </button>
+      <button class="a11y-card a11y-toggle" type="button" aria-pressed="false" data-a11y-toggle="readingGuide">
+        <span class="a11y-icon-wrap" aria-hidden="true">═</span>
+        <span>Reading guide</span>
+      </button>
+      <button class="a11y-card a11y-toggle" type="button" aria-pressed="false" data-a11y-toggle="focusHighlight">
+        <span class="a11y-icon-wrap" aria-hidden="true">□</span>
+        <span>Focus highlight</span>
+      </button>
+      <button class="a11y-card a11y-toggle" type="button" aria-pressed="false" data-a11y-toggle="pauseAnimations">
+        <span class="a11y-icon-wrap" aria-hidden="true">Ⅱ</span>
+        <span>Reduce motion</span>
+      </button>
+      <button class="a11y-card a11y-toggle" type="button" aria-pressed="false" data-a11y-toggle="hideImages">
+        <span class="a11y-icon-wrap" aria-hidden="true">◫</span>
+        <span>Hide images</span>
+      </button>
+    </div>
+
+    <button class="a11y-reset" type="button" data-a11y-reset>Reset</button>
+  </section>
+</div>
+
+<script>
+  // @ts-nocheck
+  const STORAGE_KEY = 'stage-template-accessibility-settings-v1';
+  const RANGE_MIN = 80;
+  const RANGE_MAX = 200;
+  const RANGE_STEP = 10;
+  const defaults = {
+    highContrast: false,
+    monochrome: false,
+    highlightTitles: false,
+    highlightLinks: false,
+    pauseAnimations: false,
+    hideImages: false,
+    largeCursor: false,
+    readingGuide: false,
+    focusHighlight: false,
+    fontScale: 100,
+    lineHeight: 100,
+    letterSpacing: 100
+  };
+
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const focusableSelector = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(',');
+
+  const loadSettings = () => {
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '{}');
+      return {
+        ...defaults,
+        ...parsed,
+        fontScale: clamp(Number(parsed.fontScale) || 100, RANGE_MIN, RANGE_MAX),
+        lineHeight: clamp(Number(parsed.lineHeight) || 100, RANGE_MIN, RANGE_MAX),
+        letterSpacing: clamp(Number(parsed.letterSpacing) || 100, RANGE_MIN, RANGE_MAX)
+      };
+    } catch {
+      return { ...defaults };
+    }
+  };
+
+  document.querySelectorAll('[data-a11y-widget]').forEach((widget) => {
+    if (widget.dataset.a11yReady === 'true') return;
+    widget.dataset.a11yReady = 'true';
+
+    const root = document.documentElement;
+    const trigger = widget.querySelector('[data-a11y-trigger]');
+    const panel = widget.querySelector('[data-a11y-panel]');
+    const overlay = widget.querySelector('[data-a11y-overlay]');
+    const closeButton = widget.querySelector('[data-a11y-close]');
+    const resetButton = widget.querySelector('[data-a11y-reset]');
+    const toggles = [...widget.querySelectorAll('[data-a11y-toggle]')];
+    const stepButtons = [...widget.querySelectorAll('[data-a11y-step]')];
+    const valueNodes = [...widget.querySelectorAll('[data-a11y-value]')];
+    let settings = loadSettings();
+    let opener = null;
+
+    const writeValues = () => {
+      for (const node of valueNodes) {
+        node.textContent = `${settings[node.dataset.a11yValue]}%`;
+      }
+      for (const button of toggles) {
+        button.setAttribute('aria-pressed', String(Boolean(settings[button.dataset.a11yToggle])));
+      }
+    };
+
+    const applySettings = () => {
+      root.classList.add('a11y-style-initialized');
+      root.classList.toggle('a11y-high-contrast', settings.highContrast);
+      root.classList.toggle('a11y-monochrome', settings.monochrome);
+      root.classList.toggle('a11y-highlight-titles', settings.highlightTitles);
+      root.classList.toggle('a11y-highlight-links', settings.highlightLinks);
+      root.classList.toggle('a11y-large-cursor', settings.largeCursor);
+      root.classList.toggle('a11y-reading-guide', settings.readingGuide);
+      root.classList.toggle('a11y-focus-highlight', settings.focusHighlight);
+      root.classList.toggle('a11y-reduce-motion', settings.pauseAnimations);
+      root.classList.toggle('a11y-hide-images', settings.hideImages);
+      root.style.setProperty('--a11y-font-scale', String(settings.fontScale / 100));
+      root.style.setProperty('--a11y-line-height-factor', String(settings.lineHeight / 100));
+      root.style.setProperty('--a11y-letter-spacing', `${(((settings.letterSpacing - 100) / 100) * 0.12).toFixed(3)}em`);
+      if (settings.readingGuide && !root.style.getPropertyValue('--a11y-reading-guide-y')) {
+        root.style.setProperty('--a11y-reading-guide-y', `${Math.round(window.innerHeight / 2)}px`);
+      }
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      writeValues();
+    };
+
+    const setOpen = (open) => {
+      trigger.setAttribute('aria-expanded', String(open));
+      trigger.setAttribute('aria-label', open ? 'Close accessibility menu' : 'Open accessibility menu');
+      panel.hidden = !open;
+      overlay.hidden = !open;
+      if (open) {
+        opener = document.activeElement;
+        requestAnimationFrame(() => closeButton?.focus());
+      } else if (opener instanceof HTMLElement && document.contains(opener)) {
+        opener.focus();
+      }
+    };
+
+    const isOpen = () => panel.hidden === false;
+    const close = () => setOpen(false);
+    const open = () => setOpen(true);
+
+    trigger?.addEventListener('click', () => (isOpen() ? close() : open()));
+    closeButton?.addEventListener('click', close);
+    overlay?.addEventListener('click', close);
+    resetButton?.addEventListener('click', () => {
+      settings = { ...defaults };
+      applySettings();
+    });
+
+    toggles.forEach((button) => {
+      button.addEventListener('click', () => {
+        const key = button.dataset.a11yToggle;
+        settings = { ...settings, [key]: !settings[key] };
+        applySettings();
+      });
+    });
+
+    stepButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const key = button.dataset.a11yStep;
+        const direction = Number(button.dataset.direction) || 1;
+        settings = { ...settings, [key]: clamp(settings[key] + direction * RANGE_STEP, RANGE_MIN, RANGE_MAX) };
+        applySettings();
+      });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (!isOpen()) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        close();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = [...panel.querySelectorAll(focusableSelector)].filter((node) => node.offsetParent !== null);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+
+    document.addEventListener('pointerdown', (event) => {
+      if (!isOpen()) return;
+      if (widget.contains(event.target)) return;
+      close();
+    });
+
+    document.addEventListener('pointermove', (event) => {
+      if (!settings.readingGuide) return;
+      root.style.setProperty('--a11y-reading-guide-y', `${Math.round(event.clientY)}px`);
+    }, { passive: true });
+
+    applySettings();
+  });
+</script>
+
+<style>
+  .a11y-widget {
+    --a11y-trigger-size: 48px;
+    --a11y-panel-width: min(34rem, calc(100vw - 2.5rem));
+    position: fixed;
+    z-index: 1000;
+  }
+
+  .a11y-widget-bottom-left {
+    left: 20px;
+    bottom: 20px;
+  }
+
+  .a11y-widget-bottom-right {
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .a11y-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--a11y-trigger-size);
+    height: var(--a11y-trigger-size);
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 42%, var(--color-border));
+    border-radius: var(--radius-pill);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+  }
+
+  .a11y-trigger:hover,
+  .a11y-trigger:focus-visible,
+  .a11y-trigger[aria-expanded='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-hover);
+    transform: translateY(-1px);
+  }
+
+  .a11y-trigger svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+  }
+
+  .a11y-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: transparent;
+  }
+
+  .a11y-panel {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 0;
+    z-index: 1001;
+    width: var(--a11y-panel-width);
+    max-height: min(720px, calc(100vh - 40px));
+    padding: 14px;
+    overflow: auto;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 34%, var(--color-border));
+    border-radius: 20px;
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 16%, transparent) 0%, transparent 58%),
+      var(--color-surface-raised);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .a11y-widget-bottom-right .a11y-panel {
+    right: 0;
+    left: auto;
+  }
+
+  .a11y-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: 8px 8px 12px;
+  }
+
+  .a11y-eyebrow {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--color-accent);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .a11y-header h2 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 20px;
+    line-height: 1.1;
+  }
+
+  .a11y-close,
+  .a11y-range-controls button,
+  .a11y-reset {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .a11y-close {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: var(--radius-pill);
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .a11y-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .a11y-card {
+    min-height: 92px;
+    padding: 11px;
+    border: 1px solid var(--color-border);
+    border-radius: 15px;
+    background: color-mix(in srgb, var(--color-surface) 88%, var(--color-bg));
+    color: var(--color-text);
+  }
+
+  .a11y-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  }
+
+  .a11y-toggle:hover,
+  .a11y-toggle:focus-visible {
+    border-color: color-mix(in srgb, var(--color-accent) 46%, var(--color-border));
+    background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+    transform: translateY(-1px);
+  }
+
+  .a11y-toggle[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  }
+
+  .a11y-icon-wrap {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    font-weight: 900;
+  }
+
+  .a11y-toggle > span:last-child,
+  .a11y-range > span {
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
+  .a11y-range {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    text-align: center;
+  }
+
+  .a11y-range-controls {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .a11y-range-controls button {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: var(--radius-pill);
+    color: var(--color-accent);
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  .a11y-range-controls strong {
+    color: var(--color-accent);
+    font-size: 13px;
+  }
+
+  .a11y-reset {
+    width: 100%;
+    min-height: 42px;
+    margin-top: 12px;
+    border-radius: 14px;
+    font-weight: 800;
+  }
+
+  .a11y-trigger:focus-visible,
+  .a11y-close:focus-visible,
+  .a11y-toggle:focus-visible,
+  .a11y-range-controls button:focus-visible,
+  .a11y-reset:focus-visible {
+    outline: 3px solid var(--color-focus-ring);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 640px) {
+    .a11y-widget {
+      right: 16px;
+      bottom: 16px;
+      left: 16px;
+      width: auto;
+    }
+
+    .a11y-widget .a11y-panel {
+      right: 0;
+      left: 0;
+      width: auto;
+    }
+
+    .a11y-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+
+<style is:global>
+  html {
+    --a11y-font-scale: 1;
+    --a11y-line-height-factor: 1;
+    --a11y-letter-spacing: 0em;
+    --a11y-reading-guide-y: 50vh;
+    --a11y-accent: var(--color-accent);
+  }
+
+  html.a11y-style-initialized {
+    font-size: calc(100% * var(--a11y-font-scale));
+  }
+
+  html.a11y-style-initialized :where(body, p, li, a, button, input, textarea, select, label, span, strong, small, div, nav, header, main, section, article) {
+    letter-spacing: var(--a11y-letter-spacing) !important;
+  }
+
+  html.a11y-style-initialized :where(p, li, a, button, input, textarea, select, label, span, strong, small, div) {
+    line-height: calc(var(--line-height-body, 1.6) * var(--a11y-line-height-factor)) !important;
+  }
+
+  html.a11y-style-initialized :where(h1, h2, h3, h4, h5, h6) {
+    line-height: calc(var(--line-height-heading, 1.05) * var(--a11y-line-height-factor)) !important;
+    letter-spacing: var(--a11y-letter-spacing) !important;
+  }
+
+  html.a11y-monochrome body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    pointer-events: none;
+    background: #808080;
+    mix-blend-mode: saturation;
+  }
+
+  html.a11y-reduce-motion *,
+  html.a11y-reduce-motion *::before,
+  html.a11y-reduce-motion *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+
+  html.a11y-hide-images :where(main, #main-content) :where(img, picture, video, canvas, object, embed) {
+    visibility: hidden !important;
+  }
+
+  html.a11y-highlight-links a {
+    color: var(--a11y-accent) !important;
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 0.16em !important;
+  }
+
+  html.a11y-highlight-titles :where(h1, h2, h3, h4, h5, h6) {
+    background: color-mix(in srgb, var(--a11y-accent) 24%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--a11y-accent) 34%, transparent);
+  }
+
+  html.a11y-focus-highlight :focus-visible {
+    outline: 4px solid var(--a11y-accent) !important;
+    outline-offset: 4px !important;
+  }
+
+  html.a11y-reading-guide body::after {
+    content: '';
+    position: fixed;
+    top: calc(var(--a11y-reading-guide-y) - 2px);
+    left: 0;
+    z-index: 2147482999;
+    width: 100vw;
+    height: 4px;
+    pointer-events: none;
+    background: var(--a11y-accent);
+    box-shadow: 0 0 0 9999px rgb(0 0 0 / 10%);
+  }
+
+  html.a11y-large-cursor,
+  html.a11y-large-cursor * {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cfilter id='s' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeDropShadow dx='0' dy='2' stdDeviation='1.4' flood-color='%23000' flood-opacity='.38'/%3E%3C/filter%3E%3Cpath filter='url(%23s)' d='M9 5l27 25-13 1.4 7.5 12-6.8 3.2-7.1-12.2-8.7 8.9z' fill='%23fff' stroke='%23000' stroke-width='3.5' stroke-linejoin='round'/%3E%3Cpath d='M20.8 31.8l8 12.8' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M13.8 12.8l16.6 15.3-10.5 1.1-7.2 7.3z' fill='%23fff'/%3E%3C/svg%3E") 4 4, auto !important;
+  }
+
+  html.a11y-high-contrast {
+    color-scheme: dark;
+    --a11y-accent: #ffd400;
+    --color-bg: #000000;
+    --color-surface: #050505;
+    --color-surface-muted: #111111;
+    --color-surface-raised: #050505;
+    --color-text: #ffffff;
+    --color-muted: #f2f2f2;
+    --color-border: #ffffff;
+    --color-border-strong: #ffffff;
+    --color-accent: #ffd400;
+    --color-accent-contrast: #000000;
+    --color-accent-hover: #ffffff;
+    --color-accent-soft: #332a00;
+    --color-focus-ring: rgb(255 212 0 / 64%);
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+  }
+
+  html.a11y-high-contrast :where(body, .card, .a11y-panel, .a11y-card) {
+    background-color: var(--color-bg) !important;
+    color: var(--color-text) !important;
+  }
+</style>

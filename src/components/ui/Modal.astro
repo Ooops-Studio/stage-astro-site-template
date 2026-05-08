@@ -123,7 +123,7 @@ const descriptionId = description ? `${id}-description` : undefined;
   }
 
   .ui-modal-trigger:focus-visible {
-    outline: 3px solid var(--modal-focus, color-mix(in srgb, var(--color-accent) 28%, transparent));
+    outline: 3px solid var(--modal-focus);
     outline-offset: 3px;
   }
 
@@ -133,11 +133,6 @@ const descriptionId = description ? `${id}-description` : undefined;
   }
 
   .ui-modal {
-    --modal-radius: 14px;
-    --modal-padding: 24px;
-    --modal-backdrop: rgb(25 24 23 / 42%);
-    --modal-shadow: 0 22px 80px rgb(0 0 0 / 20%);
-
     width: var(--modal-width);
     max-width: calc(100vw - 32px);
     max-height: min(760px, calc(100vh - 32px));
@@ -200,7 +195,7 @@ const descriptionId = description ? `${id}-description` : undefined;
   }
 
   .ui-modal-close:focus-visible {
-    outline: 3px solid var(--modal-focus, color-mix(in srgb, var(--color-accent) 28%, transparent));
+    outline: 3px solid var(--modal-focus);
     outline-offset: 3px;
   }
 

@@ -117,7 +117,7 @@ const descriptionId = description ? `${id}-description` : undefined;
 
   .ui-dialog-trigger:focus-visible,
   .ui-dialog-button:focus-visible {
-    outline: 3px solid var(--dialog-focus, color-mix(in srgb, var(--color-accent) 28%, transparent));
+    outline: 3px solid var(--dialog-focus);
     outline-offset: 3px;
   }
 
@@ -128,12 +128,6 @@ const descriptionId = description ? `${id}-description` : undefined;
   }
 
   .ui-dialog {
-    --dialog-width: min(460px, calc(100vw - 32px));
-    --dialog-radius: 14px;
-    --dialog-padding: 20px;
-    --dialog-backdrop: rgb(25 24 23 / 42%);
-    --dialog-shadow: 0 22px 80px rgb(0 0 0 / 20%);
-
     width: var(--dialog-width);
     max-width: var(--dialog-width);
     padding: 0;
@@ -194,11 +188,11 @@ const descriptionId = description ? `${id}-description` : undefined;
   .ui-dialog-button-confirm {
     --dialog-button-bg: var(--color-accent);
     --dialog-button-border: var(--color-accent);
-    --dialog-button-color: #fff;
+    --dialog-button-color: var(--color-accent-contrast);
   }
 
   .ui-dialog-danger .ui-dialog-button-confirm {
-    --dialog-button-bg: #d04734;
-    --dialog-button-border: #d04734;
+    --dialog-button-bg: var(--color-danger);
+    --dialog-button-border: var(--color-danger-strong);
   }
 </style>

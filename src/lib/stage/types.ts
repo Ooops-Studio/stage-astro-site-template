@@ -3,6 +3,14 @@ export type SeoPayload = {
   description: string;
   canonical: string;
   ogImage?: string | null;
+  googleSiteVerification?: string | null;
+  robots?: {
+    index: boolean;
+    follow: boolean;
+  };
+  siteName?: string | null;
+  twitterHandle?: string | null;
+  type?: 'website' | 'article' | string;
 };
 
 export type HomepageContent = {

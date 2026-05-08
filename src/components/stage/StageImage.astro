@@ -1,0 +1,54 @@
+---
+import { mediaAlt, mediaUrl, normalizeAssetUrl } from '../../lib/stage/content-helpers';
+
+type Props = {
+  asset?: unknown;
+  src?: string | null;
+  alt?: string;
+  fallbackSrc?: string;
+  width?: number | string;
+  height?: number | string;
+  sizes?: string;
+  loading?: 'lazy' | 'eager';
+  decoding?: 'async' | 'sync' | 'auto';
+  class?: string;
+};
+
+const {
+  asset,
+  src,
+  alt,
+  fallbackSrc = '/assets/images/fallback-image.svg',
+  width,
+  height,
+  sizes = '(min-width: 960px) 50vw, 100vw',
+  loading = 'lazy',
+  decoding = 'async',
+  class: className = ''
+} = Astro.props;
+
+const resolvedSrc = normalizeAssetUrl(src || '') || mediaUrl(asset) || fallbackSrc;
+const resolvedAlt = alt ?? mediaAlt(asset, '');
+---
+
+<img
+  class:list={['stage-image', className]}
+  src={resolvedSrc}
+  alt={resolvedAlt}
+  width={width}
+  height={height}
+  sizes={sizes}
+  loading={loading}
+  decoding={decoding}
+/>
+
+<style>
+  .stage-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--stage-image-radius, var(--radius-md));
+    object-fit: var(--stage-image-fit, cover);
+    background: var(--color-surface-muted);
+  }
+</style>

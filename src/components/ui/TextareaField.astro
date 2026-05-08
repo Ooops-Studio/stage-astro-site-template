@@ -71,7 +71,7 @@ const describedBy = [descriptionId, errorId].filter(Boolean).join(' ') || undefi
   }
 
   .ui-field-error {
-    color: #af2c1a;
+    color: var(--color-danger);
   }
 
   textarea {
@@ -88,17 +88,17 @@ const describedBy = [descriptionId, errorId].filter(Boolean).join(' ') || undefi
   }
 
   textarea::placeholder {
-    color: color-mix(in srgb, var(--color-muted) 75%, transparent);
+    color: var(--color-input-placeholder);
   }
 
   textarea:focus {
     border-color: var(--color-accent);
-    outline: 3px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
+    outline: 3px solid var(--color-focus-ring);
     outline-offset: 0;
   }
 
   textarea[aria-invalid='true'] {
-    border-color: #d04734;
+    border-color: var(--color-danger-strong);
   }
 
   textarea:disabled {

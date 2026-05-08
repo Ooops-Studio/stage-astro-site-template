@@ -4,6 +4,8 @@
 interface ImportMetaEnv {
   readonly STAGE_API_BASE_URL?: string;
   readonly STAGE_API_TOKEN?: string;
+  readonly STAGE_PREVIEW_TOKEN?: string;
+  readonly STAGE_PREVIEW_SECRET?: string;
   readonly PUBLIC_SITE_URL?: string;
   readonly PUBLIC_STAGE_API_BASE_URL?: string;
   readonly PUBLIC_NEWSLETTER_FORM_TOKEN?: string;

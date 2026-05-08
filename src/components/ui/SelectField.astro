@@ -423,7 +423,7 @@ const config = {
   }
 
   .ui-custom-select-field .ui-field-error {
-    color: #af2c1a;
+    color: var(--color-danger);
   }
 
   .ui-custom-select-trigger {
@@ -445,12 +445,12 @@ const config = {
 
   .ui-custom-select-trigger:focus {
     border-color: var(--color-accent);
-    outline: 3px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
+    outline: 3px solid var(--color-focus-ring);
     outline-offset: 0;
   }
 
   .ui-custom-select-trigger[aria-invalid='true'] {
-    border-color: #d04734;
+    border-color: var(--color-danger-strong);
   }
 
   .ui-custom-select-trigger:disabled {
@@ -529,7 +529,7 @@ const config = {
 
   .ui-custom-select-search:focus {
     border-color: var(--color-accent);
-    outline: 2px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
+    outline: 2px solid var(--color-focus-ring);
   }
 
   .ui-custom-select-state {

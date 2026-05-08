@@ -15,8 +15,21 @@ Configure Stage to call:
 https://your-site.com/api/stage/rebuild
 ```
 
-with header:
+The endpoint expects Stage's signed webhook headers:
 
 ```txt
-x-stage-webhook-secret: your_secret
+x-stage-timestamp: 2026-05-08T00:00:00.000Z
+x-stage-signature: v1=<hex-hmac>
+x-stage-event: cms.entry.published
+```
+
+The signature is `HMAC-SHA256(timestamp + "." + rawBody)` using `STAGE_WEBHOOK_SECRET`.
+Rebuilds are queued for `cms.*`, `media.*`, and `form.*` events.
+
+Test a copied endpoint locally or after deploy:
+
+```bash
+STAGE_WEBHOOK_SECRET=your_secret \
+WEBHOOK_TEST_URL=https://your-site.com/api/stage/rebuild \
+npm run test:webhook
 ```

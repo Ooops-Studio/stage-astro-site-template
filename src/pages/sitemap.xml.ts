@@ -1,14 +1,13 @@
 import type { APIRoute } from 'astro';
+import { createSitemapUrl, renderSitemapXml } from '../lib/seo/sitemap';
 
 export const GET: APIRoute = async () => {
   const siteUrl = (import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321').replace(/\/$/, '');
-  const urls = ['/'];
+  const urls = [
+    createSitemapUrl(siteUrl, '/', { changefreq: 'weekly', priority: 1 })
+  ];
 
-  return new Response(
-    `<?xml version="1.0" encoding="UTF-8"?>\n` +
-      `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-      urls.map((path) => `  <url><loc>${siteUrl}${path}</loc></url>`).join('\n') +
-      `\n</urlset>\n`,
-    { headers: { 'content-type': 'application/xml; charset=utf-8' } }
-  );
+  return new Response(renderSitemapXml(urls), {
+    headers: { 'content-type': 'application/xml; charset=utf-8' }
+  });
 };

@@ -1,5 +1,6 @@
 @layer tokens {
-  :root {
+  :root,
+  :root[data-theme='light'] {
     color-scheme: light;
 
     --font-family-body: 'Noto Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -50,18 +51,135 @@
     --color-bg: #f8f6f2;
     --color-surface: #ffffff;
     --color-surface-muted: #f1eee8;
+    --color-surface-raised: #ffffff;
     --color-text: #191817;
     --color-muted: #77716a;
     --color-border: #ded9d2;
+    --color-border-strong: #c7bfb6;
     --color-accent: #ff643d;
+    --color-accent-contrast: #ffffff;
     --color-accent-hover: #e9532f;
     --color-accent-soft: #fff0eb;
     --color-danger: #af2c1a;
+    --color-danger-contrast: #ffffff;
     --color-danger-soft: #fff0ed;
+    --color-danger-border: #f2b9ae;
+    --color-danger-strong: #d04734;
+    --color-focus-ring: color-mix(in srgb, var(--color-accent) 28%, transparent);
+    --color-input-placeholder: color-mix(in srgb, var(--color-muted) 75%, transparent);
+    --color-backdrop: rgb(25 24 23 / 42%);
     --color-selection-bg: color-mix(in srgb, var(--color-accent) 22%, transparent);
 
     --container-max: 1120px;
     --input-radius: var(--radius-md);
     --button-radius: var(--radius-pill);
+    --button-height: 44px;
+    --button-padding: 18px;
+    --button-font-size: 15px;
+    --button-image-size: 1.1em;
+    --button-bg: var(--color-accent);
+    --button-border: var(--color-accent);
+    --button-color: var(--color-accent-contrast);
+
+    --checkbox-size: 22px;
+    --checkbox-radius: var(--radius-sm);
+    --checkbox-bg: var(--color-surface);
+    --checkbox-border: var(--color-border);
+    --checkbox-checked-bg: var(--color-accent);
+    --checkbox-checked-border: var(--color-accent);
+    --checkbox-check-color: var(--color-accent-contrast);
+    --checkbox-focus: var(--color-focus-ring);
+
+    --dialog-width: min(460px, calc(100vw - 32px));
+    --dialog-radius: var(--radius-lg);
+    --dialog-padding: var(--space-5);
+    --dialog-bg: var(--color-surface-raised);
+    --dialog-border: var(--color-border);
+    --dialog-shadow: var(--shadow-lg);
+    --dialog-backdrop: var(--color-backdrop);
+    --dialog-backdrop-blur: 8px;
+    --dialog-focus: var(--color-focus-ring);
+    --dialog-button-bg: var(--color-surface);
+    --dialog-button-border: var(--color-border);
+    --dialog-button-color: var(--color-text);
+    --dialog-button-radius: var(--radius-pill);
+
+    --modal-width: 580px;
+    --modal-radius: var(--radius-lg);
+    --modal-padding: var(--space-6);
+    --modal-bg: var(--color-surface-raised);
+    --modal-border: var(--color-border);
+    --modal-shadow: var(--shadow-lg);
+    --modal-backdrop: var(--color-backdrop);
+    --modal-backdrop-blur: 8px;
+    --modal-focus: var(--color-focus-ring);
+    --modal-trigger-bg: var(--color-surface);
+    --modal-trigger-border: var(--color-border);
+    --modal-trigger-color: var(--color-text);
+    --modal-trigger-radius: var(--radius-pill);
+
+    --section-spacing: var(--space-14);
+  }
+
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 32%);
+    --shadow-md: 0 12px 34px rgb(0 0 0 / 34%);
+    --shadow-lg: 0 22px 80px rgb(0 0 0 / 48%);
+
+    --color-bg: #11100f;
+    --color-surface: #191817;
+    --color-surface-muted: #22201e;
+    --color-surface-raised: #1d1b19;
+    --color-text: #f6f1eb;
+    --color-muted: #aaa29a;
+    --color-border: #3a3531;
+    --color-border-strong: #504943;
+    --color-accent: #ff744f;
+    --color-accent-contrast: #180a05;
+    --color-accent-hover: #ff8a6b;
+    --color-accent-soft: color-mix(in srgb, var(--color-accent) 16%, transparent);
+    --color-danger: #ff8a78;
+    --color-danger-contrast: #230806;
+    --color-danger-soft: color-mix(in srgb, var(--color-danger) 14%, transparent);
+    --color-danger-border: color-mix(in srgb, var(--color-danger) 42%, var(--color-border));
+    --color-danger-strong: #ff7a66;
+    --color-focus-ring: color-mix(in srgb, var(--color-accent) 34%, transparent);
+    --color-input-placeholder: color-mix(in srgb, var(--color-muted) 68%, transparent);
+    --color-backdrop: rgb(0 0 0 / 62%);
+    --color-selection-bg: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      color-scheme: dark;
+
+      --shadow-sm: 0 1px 2px rgb(0 0 0 / 32%);
+      --shadow-md: 0 12px 34px rgb(0 0 0 / 34%);
+      --shadow-lg: 0 22px 80px rgb(0 0 0 / 48%);
+
+      --color-bg: #11100f;
+      --color-surface: #191817;
+      --color-surface-muted: #22201e;
+      --color-surface-raised: #1d1b19;
+      --color-text: #f6f1eb;
+      --color-muted: #aaa29a;
+      --color-border: #3a3531;
+      --color-border-strong: #504943;
+      --color-accent: #ff744f;
+      --color-accent-contrast: #180a05;
+      --color-accent-hover: #ff8a6b;
+      --color-accent-soft: color-mix(in srgb, var(--color-accent) 16%, transparent);
+      --color-danger: #ff8a78;
+      --color-danger-contrast: #230806;
+      --color-danger-soft: color-mix(in srgb, var(--color-danger) 14%, transparent);
+      --color-danger-border: color-mix(in srgb, var(--color-danger) 42%, var(--color-border));
+      --color-danger-strong: #ff7a66;
+      --color-focus-ring: color-mix(in srgb, var(--color-accent) 34%, transparent);
+      --color-input-placeholder: color-mix(in srgb, var(--color-muted) 68%, transparent);
+      --color-backdrop: rgb(0 0 0 / 62%);
+      --color-selection-bg: color-mix(in srgb, var(--color-accent) 30%, transparent);
+    }
   }
 }
