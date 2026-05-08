@@ -1,0 +1,311 @@
+---
+const truthy = (value: string | undefined, fallback = false) => {
+  if (value === undefined || value === '') return fallback;
+  return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
+};
+
+const analyticsConfigured = Boolean(
+  import.meta.env.PUBLIC_STAGE_ANALYTICS_SCRIPT_URL && import.meta.env.PUBLIC_STAGE_ANALYTICS_WEBSITE_ID
+);
+const requiresConsent = truthy(import.meta.env.PUBLIC_STAGE_ANALYTICS_REQUIRES_CONSENT, true);
+const performanceEnabled = truthy(import.meta.env.PUBLIC_STAGE_ANALYTICS_PERFORMANCE_ENABLED, false);
+const replayEnabled = truthy(import.meta.env.PUBLIC_STAGE_ANALYTICS_REPLAY_ENABLED, false);
+const enabled = analyticsConfigured && (requiresConsent || performanceEnabled || replayEnabled);
+
+const consentConfig = {
+  requiresConsent,
+  categories: {
+    analytics: true,
+    performance: performanceEnabled,
+    replay: replayEnabled
+  }
+};
+
+const serializedConfig = JSON.stringify(consentConfig).replace(/</g, '\\u003c');
+const runtimeScript = `
+(() => {
+  const CONFIG_ID = 'stage-analytics-consent-config';
+  const STORAGE_KEY = 'ooops.analytics.consent.v1';
+  const root = document.querySelector('[data-stage-analytics-consent]');
+  const configNode = document.getElementById(CONFIG_ID);
+  if (!root || !configNode?.textContent) return;
+
+  const config = JSON.parse(configNode.textContent);
+  const panel = root.querySelector('[data-consent-panel]');
+  const manage = root.querySelector('[data-consent-manage]');
+  const primaryActions = root.querySelector('[data-consent-actions]');
+  const performanceToggle = root.querySelector('[data-consent-toggle="performance"]');
+  const replayToggle = root.querySelector('[data-consent-toggle="replay"]');
+  const manageButton = root.querySelector('[data-consent-action="manage"]');
+  const saveButton = root.querySelector('[data-consent-action="save"]');
+  const cancelButton = root.querySelector('[data-consent-action="cancel"]');
+  const acceptAllButton = root.querySelector('[data-consent-action="accept-all"]');
+  const rejectAllButton = root.querySelector('[data-consent-action="reject-all"]');
+
+  function storedChoiceExists() {
+    try {
+      return Boolean(window.localStorage?.getItem(STORAGE_KEY));
+    } catch {
+      return false;
+    }
+  }
+
+  function persist(categories, decision) {
+    const consent = {
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      decision,
+      categories: {
+        analytics: Boolean(categories.analytics),
+        performance: Boolean(categories.performance),
+        replay: Boolean(categories.replay)
+      }
+    };
+    window.localStorage?.setItem(STORAGE_KEY, JSON.stringify(consent));
+    window.dispatchEvent(new CustomEvent('site:analytics-consent', { detail: consent.categories }));
+    window.dispatchEvent(new CustomEvent('ooops-consent-change', { detail: consent.categories }));
+    root.hidden = true;
+  }
+
+  function setManageOpen(open) {
+    if (!manage) return;
+    manage.hidden = !open;
+    if (primaryActions) primaryActions.hidden = open;
+    manageButton?.setAttribute('aria-expanded', String(open));
+  }
+
+  if (storedChoiceExists()) {
+    root.hidden = true;
+    return;
+  }
+
+  root.hidden = false;
+  setManageOpen(false);
+
+  manageButton?.addEventListener('click', () => setManageOpen(manage?.hidden !== false));
+  cancelButton?.addEventListener('click', () => setManageOpen(false));
+  acceptAllButton?.addEventListener('click', () => persist({
+    analytics: true,
+    performance: Boolean(config.categories.performance),
+    replay: Boolean(config.categories.replay)
+  }, 'accepted'));
+  rejectAllButton?.addEventListener('click', () => persist({ analytics: true, performance: false, replay: false }, 'optional_declined'));
+  saveButton?.addEventListener('click', () => persist({
+    analytics: true,
+    performance: Boolean(config.categories.performance && performanceToggle?.checked === true),
+    replay: Boolean(config.categories.replay && replayToggle?.checked === true)
+  }, 'custom'));
+
+  panel?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setManageOpen(false);
+  });
+})();
+`;
+---
+
+{
+  enabled ? (
+    <div class="stage-consent" data-stage-analytics-consent hidden>
+      <script is:inline id="stage-analytics-consent-config" type="application/json" set:html={serializedConfig} />
+      <section class="stage-consent-panel" role="dialog" aria-labelledby="stage-consent-title" data-consent-panel>
+        <div class="stage-consent-copy">
+          <span>Privacy choices</span>
+          <h2 id="stage-consent-title">Help improve this site</h2>
+          <p>
+            We use privacy-conscious analytics to understand page traffic and improve content. Optional categories stay off until you allow them.
+          </p>
+        </div>
+
+        <div class="stage-consent-actions" data-consent-actions>
+          <button type="button" data-consent-action="reject-all">Reject all</button>
+          <button type="button" aria-expanded="false" data-consent-action="manage">Manage</button>
+          <button type="button" data-consent-action="accept-all">Accept all</button>
+        </div>
+
+        <div class="stage-consent-manage" data-consent-manage hidden>
+          <div class="stage-consent-category is-locked">
+            <span>
+              <strong>Anonymous analytics</strong>
+              <small>Basic page traffic is collected without personal identifiers.</small>
+            </span>
+            <span class="stage-consent-required">Always on</span>
+          </div>
+          {performanceEnabled ? (
+            <label class="stage-consent-category">
+              <input type="checkbox" data-consent-toggle="performance" />
+              <span>
+                <strong>Performance analytics</strong>
+                <small>Measure page speed and reliability signals.</small>
+              </span>
+            </label>
+          ) : null}
+          {replayEnabled ? (
+            <label class="stage-consent-category">
+              <input type="checkbox" data-consent-toggle="replay" />
+              <span>
+                <strong>Session replay</strong>
+                <small>Record masked interaction sessions for debugging.</small>
+              </span>
+            </label>
+          ) : null}
+          <div class="stage-consent-manage-actions">
+            <button type="button" data-consent-action="cancel">Back</button>
+            <button type="button" data-consent-action="save">Save choices</button>
+          </div>
+        </div>
+      </section>
+      <script is:inline set:html={runtimeScript} />
+    </div>
+  ) : null
+}
+
+<style>
+  .stage-consent[hidden],
+  .stage-consent-actions[hidden],
+  .stage-consent-manage[hidden] {
+    display: none;
+  }
+
+  .stage-consent {
+    position: fixed;
+    right: max(var(--space-4), env(safe-area-inset-right));
+    bottom: var(--space-4);
+    z-index: 1200;
+    display: grid;
+    justify-items: end;
+    pointer-events: none;
+  }
+
+  .stage-consent-panel {
+    width: min(560px, calc(100vw - var(--space-8)));
+    display: grid;
+    gap: var(--space-5);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    box-shadow: var(--shadow-lg);
+    pointer-events: auto;
+  }
+
+  .stage-consent-copy {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .stage-consent-copy span {
+    color: var(--color-accent);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .stage-consent-copy h2,
+  .stage-consent-copy p {
+    margin: 0;
+  }
+
+  .stage-consent-copy h2 {
+    font-size: 18px;
+    line-height: var(--line-height-heading);
+  }
+
+  .stage-consent-copy p {
+    max-width: 68ch;
+    color: var(--color-muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .stage-consent-actions,
+  .stage-consent-manage-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .stage-consent-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .stage-consent button {
+    min-height: var(--button-height);
+    padding: 0 var(--button-padding);
+    border: 1px solid var(--color-border);
+    border-radius: var(--button-radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+  }
+
+  .stage-consent button:hover,
+  .stage-consent button:focus-visible {
+    border-color: var(--color-accent);
+    outline: none;
+  }
+
+  .stage-consent button[data-consent-action='accept-all'],
+  .stage-consent button[data-consent-action='save'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  .stage-consent-manage {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-muted);
+  }
+
+  .stage-consent-category {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+  }
+
+  label.stage-consent-category {
+    cursor: pointer;
+  }
+
+  .stage-consent-category input {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    accent-color: var(--color-accent);
+  }
+
+  .stage-consent-category > span:first-child {
+    min-width: 0;
+  }
+
+  .stage-consent-category strong,
+  .stage-consent-category small {
+    display: block;
+  }
+
+  .stage-consent-category small {
+    color: var(--color-muted);
+  }
+
+  .stage-consent-required {
+    flex: 0 0 auto;
+    color: var(--color-accent);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+</style>

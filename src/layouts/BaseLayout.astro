@@ -4,6 +4,8 @@ import AccessibilityMenu from '../components/AccessibilityMenu.astro';
 import Container from '../components/ui/Container.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
+import AnalyticsConsent from '../components/stage/AnalyticsConsent.astro';
+import StageAnalytics from '../components/stage/StageAnalytics.astro';
 import type { SeoPayload } from '../lib/stage/types';
 
 type Props = {
@@ -49,5 +51,7 @@ const robots = seo.robots ? `${seo.robots.index ? 'index' : 'noindex'},${seo.rob
       <Footer />
     </Container>
     <AccessibilityMenu />
+    <AnalyticsConsent />
+    <StageAnalytics />
   </body>
 </html>

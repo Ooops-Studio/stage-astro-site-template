@@ -51,6 +51,19 @@
     font-size: var(--font-size-body-sm);
   }
 
+  .site-brand:focus-visible,
+  .site-nav a:focus-visible,
+  .card a:focus-visible {
+    outline: 3px solid var(--color-focus-ring);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+
+  .site-nav a:hover,
+  .site-nav a:focus-visible {
+    color: var(--color-text);
+  }
+
   .eyebrow {
     color: var(--color-accent);
     font-size: 13px;
@@ -108,9 +121,13 @@
     max-width: 620px;
   }
 
+  .hero h1 {
+    line-height: 0.78;
+  }
+
   .hero h1 span {
     display: block;
-    line-height: inherit;
+    line-height: 0.78;
   }
 
   .hero-actions {

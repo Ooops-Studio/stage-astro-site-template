@@ -8,6 +8,9 @@ The active app is intentionally small and familiar to Astro users:
 src/
   pages/
     index.astro
+    posts/
+      index.astro
+      [slug].astro
     robots.txt.ts
     sitemap.xml.ts
   layouts/
@@ -15,6 +18,8 @@ src/
   components/
     AccessibilityMenu.astro
     stage/
+      AnalyticsConsent.astro
+      StageAnalytics.astro
       StageImage.astro
     ui/
       Button.astro
@@ -28,6 +33,9 @@ src/
       Section.astro
       TextareaField.astro
   lib/
+    posts/
+      client.ts
+      sitemap.ts
     stage/
       client.ts
       content-helpers.ts
@@ -48,8 +56,6 @@ public/
     fonts/
     images/
 optional/
-  analytics-consent/
-  posts/
   newsletter/
   cloudflare-rebuild/
   preview/
@@ -62,10 +68,12 @@ docs/
 - Static Astro homepage.
 - Build-time Stage API v1 reads with a private `STAGE_API_TOKEN`.
 - One Stage single type, `homepage`.
+- Included `posts` collection example with `/posts` and `/posts/[slug]`.
 - Basic SEO helper, `robots.txt`, and `sitemap.xml`.
 - Fixture fallback with build-time logs when Stage env vars are missing or Stage is unavailable.
 - Small copy-editable Astro UI primitives.
 - `StageImage.astro` for Stage media URLs, alt fallback, responsive sizing, lazy loading, and fallback image handling.
+- Env-gated Stage analytics loader and consent banner. If analytics env vars are blank, no analytics script is loaded.
 - A local accessibility menu with display, contrast, motion, cursor, reading-guide, and image-hiding controls.
 
 Optional examples live in `optional/`. Copy them into `src/` only if you need them.
@@ -157,7 +165,12 @@ Recommended setup scopes:
 
 After bootstrap, rotate to a narrower read-focused token for production builds when you no longer need setup write access.
 
-The starter bundle creates a Stage single type with API id `homepage`.
+The starter bundle creates:
+
+- a Stage single type with API id `homepage`
+- a Stage collection type with API id `posts`
+- starter homepage and post content
+- a public newsletter form token for the optional newsletter component
 
 Recommended fields:
 
@@ -173,21 +186,17 @@ Recommended fields:
 
 You can rename the API id and fields in `src/lib/stage/homepage.ts`.
 
-## Optional Posts Collection
+## Included Posts Collection
 
-Use `optional/posts` if you want a collection example.
-
-It demonstrates:
+The template includes a small collection example:
 
 - `/posts/[slug]` static pages.
 - `/posts` static index page.
 - Stage collection API reads.
 - Per-post SEO.
-- Optional sitemap integration.
+- Sitemap integration.
 
 Expected collection API id: `posts`.
-
-Copying the optional posts module adds both `/posts` and `/posts/[slug]`.
 
 ## Optional Preview Mode
 
@@ -214,11 +223,46 @@ It demonstrates posting to:
 
 No private Stage API token is exposed to the browser.
 
-## Optional Analytics Consent
+## Stage Analytics
 
-Use `optional/analytics-consent` if your site enables optional performance analytics or replay.
+The active template includes `StageAnalytics.astro` and `AnalyticsConsent.astro` in the base layout. It is fully env-gated:
 
-It demonstrates the framework-agnostic consent package pattern. Anonymous analytics can run by default; performance analytics and replay should wait for explicit visitor consent.
+- If `PUBLIC_STAGE_ANALYTICS_SCRIPT_URL` or `PUBLIC_STAGE_ANALYTICS_WEBSITE_ID` is blank, it renders nothing and sends no events.
+- Once both values are configured, it loads the Stage analytics script in the browser.
+- Consent is required by default through `PUBLIC_STAGE_ANALYTICS_REQUIRES_CONSENT=true`.
+- If your site can legally run anonymous analytics without opt-in, set `PUBLIC_STAGE_ANALYTICS_REQUIRES_CONSENT=false`.
+- Performance analytics and replay stay disabled unless their env flags are explicitly enabled and consent allows them.
+
+```env
+PUBLIC_STAGE_ANALYTICS_SCRIPT_URL=
+PUBLIC_STAGE_ANALYTICS_WEBSITE_ID=
+PUBLIC_STAGE_ANALYTICS_REQUIRES_CONSENT=true
+PUBLIC_STAGE_ANALYTICS_RESPECT_DNT=true
+PUBLIC_STAGE_ANALYTICS_PERFORMANCE_ENABLED=false
+PUBLIC_STAGE_ANALYTICS_REPLAY_ENABLED=false
+PUBLIC_STAGE_ANALYTICS_REPLAY_SCRIPT_URL=
+PUBLIC_STAGE_ANALYTICS_REPLAY_SAMPLE_RATE=0.05
+PUBLIC_STAGE_ANALYTICS_REPLAY_MASK_LEVEL=moderate
+PUBLIC_STAGE_ANALYTICS_REPLAY_MAX_DURATION_MS=600000
+PUBLIC_STAGE_ANALYTICS_REPLAY_BLOCK_SELECTOR=[data-private], [data-sensitive]
+PUBLIC_STAGE_ANALYTICS_EXCLUDED_PATHS=/preview
+PUBLIC_STAGE_ANALYTICS_INTERNAL_REFERRER_DOMAINS=
+```
+
+These are public browser env vars, not private API tokens. In Astro, they are baked at build time for static deployments.
+
+For local development with the bundled Ooops Suite stack, use:
+
+```env
+PUBLIC_STAGE_ANALYTICS_SCRIPT_URL=http://localhost:3001/script.js
+PUBLIC_STAGE_ANALYTICS_WEBSITE_ID=2e3df25b-701f-4c95-8976-c90b1ed87da2
+PUBLIC_STAGE_ANALYTICS_REQUIRES_CONSENT=true
+PUBLIC_STAGE_ANALYTICS_RESPECT_DNT=true
+```
+
+Restart `npm run dev` after changing these values. Accept analytics in the banner, visit a few pages in the template, then open Stage Analytics for the same organization. The dashboard starts clean unless you seed or generate traffic.
+
+For production, use the analytics script URL and website id from your Stage analytics setup. Keep the private `STAGE_API_TOKEN` server/build-only; analytics uses only public browser config.
 
 ## Optional Cloudflare Pages Rebuild
 

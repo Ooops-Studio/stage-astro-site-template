@@ -1,12 +1,14 @@
 ---
 type Props = {
-  spacing?: 'sm' | 'md' | 'lg';
+  spacing?: "sm" | "md" | "lg";
   id?: string;
   class?: string;
 };
 
-const { spacing = 'md', id, class: className = '' } = Astro.props;
-const classes = ['ui-section', `ui-section-${spacing}`, className].filter(Boolean).join(' ');
+const { spacing = "md", id, class: className = "" } = Astro.props;
+const classes = ["ui-section", `ui-section-${spacing}`, className]
+  .filter(Boolean)
+  .join(" ");
 ---
 
 <section id={id} class={classes}>
@@ -14,10 +16,6 @@ const classes = ['ui-section', `ui-section-${spacing}`, className].filter(Boolea
 </section>
 
 <style>
-  .ui-section {
-    padding-block: var(--section-spacing);
-  }
-
   .ui-section-sm {
     --section-spacing: 32px;
   }

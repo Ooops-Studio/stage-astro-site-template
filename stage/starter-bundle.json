@@ -64,7 +64,7 @@
       "kind": "collection",
       "apiId": "posts",
       "displayName": "Posts",
-      "description": "Optional blog/news collection used by optional/posts.",
+      "description": "Blog/news collection used by the included posts pages.",
       "publicMode": "public_readable",
       "reviewWorkflowMode": "disabled",
       "hasSlug": true,
@@ -89,6 +89,11 @@
           "apiId": "excerpt",
           "displayName": "Excerpt",
           "kind": "text"
+        },
+        {
+          "apiId": "hero-image",
+          "displayName": "Hero image",
+          "kind": "media"
         },
         {
           "apiId": "body",
@@ -159,7 +164,7 @@
               "localized": {}
             },
             "body": {
-              "value": "This optional collection entry is safe to delete after you connect your own content model.",
+              "value": "This starter collection entry is safe to delete after you connect your own content model.",
               "localized": {}
             },
             "seo-title": {

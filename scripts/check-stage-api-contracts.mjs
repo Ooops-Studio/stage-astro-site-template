@@ -30,20 +30,24 @@ const scannedExtensions = new Set([
 
 const requiredFiles = [
   '.env.example',
-  'optional/analytics-consent/README.md',
   'optional/cloudflare-rebuild/README.md',
   'optional/newsletter/README.md',
-  'optional/posts/README.md',
   'optional/preview/README.md',
   'docs/deployment.md',
   'docs/security.md',
   'scripts/test-stage-webhook-signature.mjs',
+  'src/components/stage/AnalyticsConsent.astro',
+  'src/components/stage/StageAnalytics.astro',
   'src/components/stage/StageImage.astro',
   'src/components/ui/ErrorState.astro',
+  'src/lib/posts/client.ts',
+  'src/lib/posts/sitemap.ts',
   'src/lib/stage/client.ts',
   'src/lib/stage/content-helpers.ts',
   'src/lib/stage/homepage.ts',
   'src/lib/seo/sitemap.ts',
+  'src/pages/posts/index.astro',
+  'src/pages/posts/[slug].astro',
   'src/styles/fonts.css',
   'src/styles/global.css',
   'src/styles/reset.css',
@@ -73,6 +77,9 @@ const requiredBlankExampleSecrets = [
   'STAGE_PREVIEW_TOKEN',
   'STAGE_PREVIEW_SECRET',
   'PUBLIC_NEWSLETTER_FORM_TOKEN',
+  'PUBLIC_STAGE_ANALYTICS_SCRIPT_URL',
+  'PUBLIC_STAGE_ANALYTICS_WEBSITE_ID',
+  'PUBLIC_STAGE_ANALYTICS_REPLAY_SCRIPT_URL',
   'CLOUDFLARE_PAGES_DEPLOY_HOOK_URL',
   'STAGE_WEBHOOK_SECRET'
 ];
@@ -81,15 +88,12 @@ const browserFacingRoots = [
   'src/components/',
   'src/layouts/',
   'src/pages/',
-  'optional/newsletter/',
-  'optional/analytics-consent/'
+  'optional/newsletter/'
 ];
 
 const requiredOptionalCopyTargets = new Map([
-  ['optional/analytics-consent/README.md', ['src/lib/analytics/consent.ts']],
   ['optional/cloudflare-rebuild/README.md', ['functions/api/stage/rebuild.ts']],
   ['optional/newsletter/README.md', ['src/components/newsletter/NewsletterForm.astro']],
-  ['optional/posts/README.md', ['src/lib/posts/client.ts', 'src/lib/posts/sitemap.ts', 'src/pages/posts/index.astro', 'src/pages/posts/[slug].astro']],
   ['optional/preview/README.md', ['src/lib/stage/preview.ts', 'src/pages/api/preview.ts']]
 ]);
 
@@ -189,9 +193,7 @@ for (const [readmePath, copyTargets] of requiredOptionalCopyTargets) {
 const stageSource = [
   read('src/lib/stage/client.ts'),
   read('src/lib/stage/homepage.ts'),
-  exists('optional/posts/src/lib/posts/client.ts')
-    ? read('optional/posts/src/lib/posts/client.ts')
-    : ''
+  read('src/lib/posts/client.ts')
 ].join('\n');
 
 if (!stageSource.includes('getStageSingle') && !stageSource.includes('/content/singles/')) {

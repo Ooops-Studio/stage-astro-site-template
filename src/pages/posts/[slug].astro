@@ -22,7 +22,9 @@ if (!post) {
       <span class="meta">{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('en') : 'Post'}</span>
       <h1>{post.title}</h1>
       <p>{post.excerpt}</p>
-      <StageImage asset={post.heroImage} alt={post.heroImageAlt} width="1200" height="760" loading="eager" />
+      {post.heroImageUrl ? (
+        <StageImage src={post.heroImageUrl} alt={post.heroImageAlt} width="1200" height="760" loading="eager" />
+      ) : null}
       <div set:html={post.body} />
     </div>
   </article>

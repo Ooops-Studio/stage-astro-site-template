@@ -752,6 +752,11 @@ const { position = "bottom-left", label = "Accessibility" } = Astro.props;
     letter-spacing: var(--a11y-letter-spacing) !important;
   }
 
+  html.a11y-style-initialized .hero h1,
+  html.a11y-style-initialized .hero h1 span {
+    line-height: calc(0.98 * var(--a11y-line-height-factor)) !important;
+  }
+
   html.a11y-monochrome body::before {
     content: "";
     position: fixed;

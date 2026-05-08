@@ -1,5 +1,5 @@
 import { getStageCollectionEntries, getStageCollectionEntry } from '../stage/client';
-import { asRecord, asString, mediaAlt, mediaUrl } from '../stage/content-helpers';
+import { asRecord, asString, mediaAlt, mediaUrl, type PublicMediaMap } from '../stage/content-helpers';
 import { seoFromFields } from '../stage/seo';
 import type { SeoPayload } from '../stage/types';
 
@@ -28,17 +28,19 @@ const asDateString = (value: unknown): string | null => {
 
 const mapPostSummary = (entry: Record<string, unknown>): PostSummary => {
   const fields = asRecord(entry.fields || entry);
+  const mediaMap = asRecord(entry._media) as PublicMediaMap;
   const title = asString(fields.title) || 'Untitled post';
   const slug = asString(fields.slug) || asString(entry.slug) || asString(entry.id);
+  const heroImage = fields.heroImage || fields['hero-image'];
 
   return {
     id: asString(entry.id) || slug,
     title,
     slug,
     excerpt: asString(fields.excerpt),
-    heroImage: fields.heroImage,
-    heroImageUrl: mediaUrl(fields.heroImage),
-    heroImageAlt: mediaAlt(fields.heroImage, title),
+    heroImage,
+    heroImageUrl: mediaUrl(heroImage, mediaMap),
+    heroImageAlt: mediaAlt(heroImage, title, mediaMap),
     publishedAt: asDateString(fields.publishedAt),
     updatedAt: asDateString(entry.updatedAt) || asDateString(fields.updatedAt)
   };

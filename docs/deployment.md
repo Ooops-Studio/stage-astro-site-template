@@ -22,6 +22,13 @@ Optional env vars:
 ```env
 PUBLIC_STAGE_API_BASE_URL=https://stage.example.com
 PUBLIC_NEWSLETTER_FORM_TOKEN=
+PUBLIC_STAGE_ANALYTICS_SCRIPT_URL=
+PUBLIC_STAGE_ANALYTICS_WEBSITE_ID=
+PUBLIC_STAGE_ANALYTICS_REQUIRES_CONSENT=true
+PUBLIC_STAGE_ANALYTICS_RESPECT_DNT=true
+PUBLIC_STAGE_ANALYTICS_PERFORMANCE_ENABLED=false
+PUBLIC_STAGE_ANALYTICS_REPLAY_ENABLED=false
+PUBLIC_STAGE_ANALYTICS_REPLAY_SCRIPT_URL=
 STAGE_PREVIEW_TOKEN=
 STAGE_PREVIEW_SECRET=
 CLOUDFLARE_PAGES_DEPLOY_HOOK_URL=
@@ -78,6 +85,17 @@ STAGE_API_BASE_URL=http://stage.localhost:4275/api/stage/v1
 STAGE_API_TOKEN=your_private_stage_api_token
 PUBLIC_SITE_URL=http://localhost:4321
 ```
+
+For local analytics with the bundled Ooops Suite stack:
+
+```env
+PUBLIC_STAGE_ANALYTICS_SCRIPT_URL=http://localhost:3001/script.js
+PUBLIC_STAGE_ANALYTICS_WEBSITE_ID=your_stage_analytics_website_id
+PUBLIC_STAGE_ANALYTICS_REQUIRES_CONSENT=true
+PUBLIC_STAGE_ANALYTICS_RESPECT_DNT=true
+```
+
+Restart the Astro dev server after changing public env vars. Accept analytics in the banner, then browser-side events should appear in Stage Analytics for the matching website id.
 
 If this is a fresh Stage organization, run the bootstrap once before expecting live content:
 

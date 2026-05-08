@@ -68,7 +68,7 @@ It creates or updates:
 
 - `homepage` single type
 - starter homepage content
-- optional `posts` collection
+- `posts` collection
 - one starter post
 - public newsletter form
 
@@ -91,6 +91,19 @@ npm run dev
 ```
 
 The homepage should now load from Stage instead of fixture content.
+
+## 7. Optional Local Analytics
+
+If you want the local template to send pageviews to Stage Analytics, add browser-side analytics env vars:
+
+```env
+PUBLIC_STAGE_ANALYTICS_SCRIPT_URL=http://localhost:3001/script.js
+PUBLIC_STAGE_ANALYTICS_WEBSITE_ID=your_stage_analytics_website_id
+PUBLIC_STAGE_ANALYTICS_REQUIRES_CONSENT=true
+PUBLIC_STAGE_ANALYTICS_RESPECT_DNT=true
+```
+
+Restart `npm run dev`, accept analytics in the banner, visit a few pages, then check the Analytics page in Stage for the same organization.
 
 ## Production Token Recommendation
 

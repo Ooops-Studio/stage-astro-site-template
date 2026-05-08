@@ -1,0 +1,194 @@
+---
+const truthy = (value: string | undefined, fallback = false) => {
+  if (value === undefined || value === '') return fallback;
+  return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
+};
+
+const numberValue = (value: string | undefined, fallback: number) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const listValue = (value: string | undefined) =>
+  (value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const scriptUrl = import.meta.env.PUBLIC_STAGE_ANALYTICS_SCRIPT_URL || '';
+const websiteId = import.meta.env.PUBLIC_STAGE_ANALYTICS_WEBSITE_ID || '';
+const enabled = Boolean(scriptUrl && websiteId);
+
+const analyticsConfig = {
+  scriptUrl,
+  websiteId,
+  requiresConsent: truthy(import.meta.env.PUBLIC_STAGE_ANALYTICS_REQUIRES_CONSENT, false),
+  respectDoNotTrack: truthy(import.meta.env.PUBLIC_STAGE_ANALYTICS_RESPECT_DNT, true),
+  performanceEnabled: truthy(import.meta.env.PUBLIC_STAGE_ANALYTICS_PERFORMANCE_ENABLED, false),
+  replay: {
+    enabled: truthy(import.meta.env.PUBLIC_STAGE_ANALYTICS_REPLAY_ENABLED, false),
+    scriptUrl: import.meta.env.PUBLIC_STAGE_ANALYTICS_REPLAY_SCRIPT_URL || '',
+    sampleRate: numberValue(import.meta.env.PUBLIC_STAGE_ANALYTICS_REPLAY_SAMPLE_RATE, 0.05),
+    maskLevel: import.meta.env.PUBLIC_STAGE_ANALYTICS_REPLAY_MASK_LEVEL || 'moderate',
+    maxDurationMs: numberValue(import.meta.env.PUBLIC_STAGE_ANALYTICS_REPLAY_MAX_DURATION_MS, 600000),
+    blockSelector:
+      import.meta.env.PUBLIC_STAGE_ANALYTICS_REPLAY_BLOCK_SELECTOR || '[data-private], [data-sensitive]'
+  },
+  privacy: {
+    excludedPathPatterns: listValue(import.meta.env.PUBLIC_STAGE_ANALYTICS_EXCLUDED_PATHS),
+    internalReferrerDomains: listValue(import.meta.env.PUBLIC_STAGE_ANALYTICS_INTERNAL_REFERRER_DOMAINS)
+  }
+};
+
+const serializedConfig = JSON.stringify(analyticsConfig).replace(/</g, '\\u003c');
+const runtimeScript = `
+          (() => {
+            const CONFIG_NODE_ID = 'stage-analytics-config';
+            const SCRIPT_ID = 'ooops-public-analytics-script';
+            const CONSENT_STORAGE_KEY = 'ooops.analytics.consent.v1';
+            const INTERNAL_COOKIE = 'ooops_suite_internal_analytics';
+            const DEFAULT_CONSENT = { analytics: true, performance: false, replay: false };
+            const node = document.getElementById(CONFIG_NODE_ID);
+
+            if (!node?.textContent) return;
+
+            const config = JSON.parse(node.textContent);
+            const beforeSendName = '__ooopsStageTemplateBeforeSend';
+
+            function readStoredConsent() {
+              try {
+                const raw = window.localStorage?.getItem(CONSENT_STORAGE_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                return parsed && typeof parsed === 'object' ? parsed.categories || null : null;
+              } catch {
+                return null;
+              }
+            }
+
+            function hasStoredConsentChoice() {
+              try {
+                return Boolean(window.localStorage?.getItem(CONSENT_STORAGE_KEY));
+              } catch {
+                return false;
+              }
+            }
+
+            function currentConsent() {
+              const stored = readStoredConsent();
+              return { ...DEFAULT_CONSENT, ...(stored || {}) };
+            }
+
+            function hasInternalAnalyticsCookie() {
+              return document.cookie
+                .split(';')
+                .map((item) => item.trim())
+                .some((item) => item === INTERNAL_COOKIE + '=1' || item.startsWith(INTERNAL_COOKIE + '=true'));
+            }
+
+            function pathMatches(patterns, pathname) {
+              return Array.isArray(patterns) && patterns.some((pattern) => {
+                if (!pattern) return false;
+                if (pattern.endsWith('*')) return pathname.startsWith(pattern.slice(0, -1));
+                return pathname === pattern || pathname.startsWith(pattern + '/');
+              });
+            }
+
+            function isInternalReferrer() {
+              const domains = config.privacy?.internalReferrerDomains || [];
+              if (!document.referrer || domains.length === 0) return false;
+              try {
+                const hostname = new URL(document.referrer).hostname;
+                return domains.some((domain) => hostname === domain || hostname.endsWith('.' + domain));
+              } catch {
+                return false;
+              }
+            }
+
+            function shouldBlockAnalytics() {
+              if (config.respectDoNotTrack && (navigator.doNotTrack === '1' || window.doNotTrack === '1')) {
+                return true;
+              }
+              if (hasInternalAnalyticsCookie() || isInternalReferrer()) {
+                return true;
+              }
+              return pathMatches(config.privacy?.excludedPathPatterns || [], window.location.pathname);
+            }
+
+            window[beforeSendName] = (_type, payload) => {
+              if (shouldBlockAnalytics()) return false;
+              return payload;
+            };
+
+            function removeAnalyticsScript() {
+              document.getElementById(SCRIPT_ID)?.remove();
+            }
+
+            function installAnalyticsScript() {
+              const consent = currentConsent();
+              if (!config.scriptUrl || !config.websiteId || !consent.analytics || shouldBlockAnalytics()) {
+                removeAnalyticsScript();
+                return;
+              }
+
+              const replayAllowed = Boolean(config.replay?.enabled && consent.replay);
+              const performanceAllowed = Boolean(config.performanceEnabled && consent.performance);
+              const source = replayAllowed && config.replay?.scriptUrl ? config.replay.scriptUrl : config.scriptUrl;
+              const signature = JSON.stringify({
+                source,
+                websiteId: config.websiteId,
+                performanceAllowed,
+                replayAllowed,
+                sampleRate: config.replay?.sampleRate,
+                maskLevel: config.replay?.maskLevel,
+                maxDurationMs: config.replay?.maxDurationMs,
+                blockSelector: config.replay?.blockSelector
+              });
+
+              const existing = document.getElementById(SCRIPT_ID);
+              if (existing?.dataset.signature === signature) return;
+              existing?.remove();
+
+              const script = document.createElement('script');
+              script.id = SCRIPT_ID;
+              script.async = true;
+              script.defer = true;
+              script.src = source;
+              script.dataset.websiteId = config.websiteId;
+              script.dataset.beforeSend = beforeSendName;
+              script.dataset.excludeSearch = 'true';
+              script.dataset.excludeHash = 'true';
+              script.dataset.signature = signature;
+
+              if (config.respectDoNotTrack) script.dataset.doNotTrack = 'true';
+              if (performanceAllowed) script.dataset.performance = 'true';
+              if (replayAllowed) {
+                script.dataset.sampleRate = String(config.replay?.sampleRate ?? 0.05);
+                script.dataset.maskLevel = config.replay?.maskLevel || 'moderate';
+                script.dataset.maxDuration = String(config.replay?.maxDurationMs ?? 600000);
+                script.dataset.blockSelector = config.replay?.blockSelector || '[data-private], [data-sensitive]';
+              }
+
+              document.head.appendChild(script);
+            }
+
+            window.addEventListener('storage', (event) => {
+              if (event.key === CONSENT_STORAGE_KEY) installAnalyticsScript();
+            });
+            window.addEventListener('ooops-consent-change', installAnalyticsScript);
+            window.addEventListener('site:analytics-consent', installAnalyticsScript);
+            document.addEventListener('astro:page-load', installAnalyticsScript);
+
+            installAnalyticsScript();
+          })();
+        `;
+---
+
+{
+  enabled ? (
+    <>
+      <script is:inline id="stage-analytics-config" type="application/json" set:html={serializedConfig} />
+      <script is:inline set:html={runtimeScript} />
+    </>
+  ) : null
+}
