@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { OoopsStageApiError, OoopsStageClient } from '@ooopsstudio/stage-api';
 
 const loadLocalEnv = async () => {
   for (const fileName of ['.env.local', '.env']) {
@@ -32,6 +31,26 @@ if (!baseUrl || !token) {
 
 const readBundle = async () => JSON.parse(await readFile(bundlePath, 'utf8'));
 
+const stageRequest = async (method, path, body) => {
+  const response = await fetch(`${baseUrl}${path}`, {
+    method,
+    headers: {
+      accept: 'application/json',
+      authorization: `Bearer ${token}`,
+      ...(body ? { 'content-type': 'application/json' } : {})
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const text = await response.text();
+  const json = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    const error = new Error(json?.message || `Stage API request failed with ${response.status}`);
+    Object.assign(error, { status: response.status, code: json?.code, body: json });
+    throw error;
+  }
+  return json;
+};
+
 const printCounts = (label, counts = {}) => {
   const entries = Object.entries(counts).filter(([, value]) => Number(value) > 0);
   if (entries.length === 0) return;
@@ -42,9 +61,8 @@ const printCounts = (label, counts = {}) => {
 };
 
 try {
-  const client = new OoopsStageClient({ baseUrl, token });
   const bundle = await readBundle();
-  const validation = await client.request('POST', '/imports/validate', { body: bundle });
+  const validation = await stageRequest('POST', '/imports/validate', bundle);
 
   if (!validation?.ok || !validation.valid) {
     console.error('[stage-bootstrap] Bundle validation failed.');
@@ -57,7 +75,7 @@ try {
   console.log('[stage-bootstrap] Bundle is valid.');
   printCounts('Planned resources', validation.counts);
 
-  const result = await client.request('POST', '/imports/apply', { body: bundle });
+  const result = await stageRequest('POST', '/imports/apply', bundle);
   console.log('[stage-bootstrap] Bootstrap complete.');
   printCounts('Created', result.summary?.creates);
   printCounts('Updated', result.summary?.updates);
@@ -77,8 +95,8 @@ try {
     }
   }
 } catch (error) {
-  if (error instanceof OoopsStageApiError) {
-    console.error(`[stage-bootstrap] Stage API error ${error.status} (${error.code}): ${error.message}`);
+  if (typeof error === 'object' && error !== null && 'status' in error) {
+    console.error(`[stage-bootstrap] Stage API error ${error.status} (${error.code || 'unknown'}): ${error.message}`);
   } else {
     console.error(`[stage-bootstrap] ${error instanceof Error ? error.message : String(error)}`);
   }

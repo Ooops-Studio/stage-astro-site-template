@@ -1,18 +1,12 @@
-import { OoopsStageClient } from '@ooopsstudio/stage-api';
+import { stageRequest } from './stage-request';
 
-const baseUrl = process.env.STAGE_API_BASE_URL ?? 'http://stage.localhost:4275/api/stage/v1';
-const token = process.env.STAGE_API_TOKEN ?? '';
 const webhookUrl = process.env.WEBHOOK_RECEIVER_URL ?? '';
 
-if (!token) throw new Error('Set STAGE_API_TOKEN before running this example.');
-
-const stage = new OoopsStageClient({ baseUrl, token });
-
-const forms = await stage.forms.list<{
+const forms = await stageRequest<{
   ok: true;
   forms?: Array<{ id: string; title: string; shareToken?: string | null }>;
   items?: Array<{ id: string; title: string; shareToken?: string | null }>;
-}>();
+}>('GET', '/forms');
 
 console.log('Forms');
 for (const form of forms.forms ?? forms.items ?? []) {
@@ -20,11 +14,11 @@ for (const form of forms.forms ?? forms.items ?? []) {
 }
 
 if (webhookUrl) {
-  const webhook = await stage.webhooks.create<{
+  const webhook = await stageRequest<{
     ok: true;
     subscription: { id: string; name: string; eventTypes: string[] };
     signingSecret?: string;
-  }>({
+  }>('POST', '/webhooks', {
     name: 'Template CMS rebuild receiver',
     url: webhookUrl,
     enabled: true,
@@ -36,4 +30,3 @@ if (webhookUrl) {
 } else {
   console.log('Set WEBHOOK_RECEIVER_URL to create a webhook subscription.');
 }
-

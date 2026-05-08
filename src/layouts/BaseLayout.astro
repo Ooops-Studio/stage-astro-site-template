@@ -2,6 +2,8 @@
 import '../styles/global.css';
 import AccessibilityMenu from '../components/AccessibilityMenu.astro';
 import Container from '../components/ui/Container.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
 import type { SeoPayload } from '../lib/stage/types';
 
 type Props = {
@@ -40,19 +42,11 @@ const robots = seo.robots ? `${seo.robots.index ? 'index' : 'noindex'},${seo.rob
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
     <Container>
-      <header class="site-header">
-        <a class="site-brand" href="/">Stage Astro Site</a>
-        <nav class="site-nav" aria-label="Primary">
-          <a href="/">Home</a>
-          <a href="https://github.com/Ooops-Studio/stage-astro-site-template">Template</a>
-        </nav>
-      </header>
+      <Header />
       <main id="main-content" tabindex="-1">
         <slot />
       </main>
-      <footer class="site-footer">
-        Powered by Stage CMS and Astro.
-      </footer>
+      <Footer />
     </Container>
     <AccessibilityMenu />
   </body>

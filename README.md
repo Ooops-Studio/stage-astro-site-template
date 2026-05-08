@@ -60,7 +60,7 @@ docs/
 ## What Is Active By Default
 
 - Static Astro homepage.
-- Build-time Stage API v1 reads through `@ooopsstudio/stage-api` with a private `STAGE_API_TOKEN`.
+- Build-time Stage API v1 reads with a private `STAGE_API_TOKEN`.
 - One Stage single type, `homepage`.
 - Basic SEO helper, `robots.txt`, and `sitemap.xml`.
 - Fixture fallback with build-time logs when Stage env vars are missing or Stage is unavailable.
@@ -218,7 +218,7 @@ No private Stage API token is exposed to the browser.
 
 Use `optional/analytics-consent` if your site enables optional performance analytics or replay.
 
-It demonstrates the framework-agnostic `@ooopsstudio/analytics-consent` package. Anonymous analytics can run by default; performance analytics and replay should wait for explicit visitor consent.
+It demonstrates the framework-agnostic consent package pattern. Anonymous analytics can run by default; performance analytics and replay should wait for explicit visitor consent.
 
 ## Optional Cloudflare Pages Rebuild
 

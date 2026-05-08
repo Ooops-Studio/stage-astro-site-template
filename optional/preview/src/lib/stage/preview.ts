@@ -1,21 +1,25 @@
-import { OoopsStageClient } from '@ooopsstudio/stage-api';
 import { stageApiBaseUrl, stagePreviewToken } from './env';
 
-export const stagePreviewClient = stageApiBaseUrl && stagePreviewToken
-  ? new OoopsStageClient({ baseUrl: stageApiBaseUrl, token: stagePreviewToken })
-  : null;
+const previewRequest = async (path: string, query?: Record<string, string | boolean>) => {
+  if (!stageApiBaseUrl || !stagePreviewToken) return null;
+  const url = new URL(`${stageApiBaseUrl}${path}`);
+  for (const [key, value] of Object.entries(query ?? {})) {
+    url.searchParams.set(key, String(value));
+  }
+  const response = await fetch(url, {
+    headers: {
+      accept: 'application/json',
+      authorization: `Bearer ${stagePreviewToken}`
+    }
+  });
+  if (!response.ok) return null;
+  return response.json();
+};
 
 export const getPreviewSingle = async (apiId: string) => {
-  if (!stagePreviewClient) return null;
-  return stagePreviewClient.request('GET', `/content/singles/${encodeURIComponent(apiId)}`, {
-    query: { preview: true }
-  });
+  return previewRequest(`/content/singles/${encodeURIComponent(apiId)}`, { preview: true });
 };
 
 export const getPreviewCollectionEntry = async (apiId: string, idOrSlug: string) => {
-  if (!stagePreviewClient) return null;
-  return stagePreviewClient.request('GET', `/content/collections/${encodeURIComponent(apiId)}/entries/${encodeURIComponent(idOrSlug)}`, {
-    query: { preview: true }
-  });
+  return previewRequest(`/content/collections/${encodeURIComponent(apiId)}/entries/${encodeURIComponent(idOrSlug)}`, { preview: true });
 };
-

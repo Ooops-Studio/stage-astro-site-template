@@ -5,25 +5,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getHome } from '../lib/stage/homepage';
 
 const home = await getHome();
+const headingLines = home.heading === 'Build a Stage-powered Astro site'
+  ? ['Build a', 'Stage-powered', 'Astro site']
+  : [home.heading];
 ---
 
 <BaseLayout seo={home.seo}>
   <Section spacing="lg" class="hero">
     <span class="eyebrow">Stage CMS + Astro</span>
-    <h1>{home.heading}</h1>
+    <h1>
+      {headingLines.map((line) => <span>{line}</span>)}
+    </h1>
     <p>{home.description}</p>
-    <Button href="https://github.com/Ooops-Studio/stage-astro-site-template" target="_blank">Use template</Button>
-  </Section>
-
-  <Section id="backbone">
-    <div class="card">
-      <span class="meta">Backbone</span>
-      <h2>One Stage single type powers this page.</h2>
-      <p>
-        Add your Stage API token, create a <code>homepage</code> single type, and map
-        <code>heading</code>, <code>description</code>, <code>seo-title</code>, and
-        <code>seo-description</code>.
-      </p>
-    </div>
+    <Button href="http://localhost:4274/developers/api" target="_blank">Read docs</Button>
   </Section>
 </BaseLayout>

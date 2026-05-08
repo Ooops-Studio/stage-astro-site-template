@@ -2,11 +2,13 @@
 
 Copy this example into `src/lib/analytics/consent.ts` if your public site enables optional analytics categories such as performance analytics or session replay.
 
-Install dependency:
+Install the consent package when it is available in your package registry:
 
 ```bash
 npm install @ooopsstudio/analytics-consent
 ```
+
+This optional example is not part of the base template install so clean template clones can build without unpublished optional packages.
 
 The package defaults to:
 
@@ -28,4 +30,3 @@ The banner uses provider-neutral copy and can be themed with template tokens:
   --ooops-consent-accent-text: var(--color-accent-contrast);
 }
 ```
-

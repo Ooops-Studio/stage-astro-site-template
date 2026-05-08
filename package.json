@@ -20,8 +20,6 @@
     "validate": "npm run lint && npm run check && npm run check:openapi && npm run build"
   },
   "dependencies": {
-    "@ooopsstudio/analytics-consent": "^0.1.0",
-    "@ooopsstudio/stage-api": "^0.1.0",
     "astro": "^5.16.3"
   },
   "devDependencies": {
